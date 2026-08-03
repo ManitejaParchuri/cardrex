@@ -17,6 +17,8 @@ type CardArtworkProps = {
   rarity: Rarity;
   imageUrl?: string | null;
   className?: string;
+  objectPosition?: string;
+  crop?: string;
 };
 
 const cardSymbol = (name?: string | null) =>
@@ -27,6 +29,8 @@ export function CardArtwork({
   rarity,
   imageUrl,
   className = '',
+  objectPosition = '50% 50%',
+  crop = 'default',
 }: CardArtworkProps) {
   const source = imageUrl?.trim() || '';
   const [isLoading, setIsLoading] = useState(Boolean(source));
@@ -50,6 +54,7 @@ export function CardArtwork({
     <div
       className={`relative isolate h-full w-full overflow-hidden bg-gradient-to-br ${rarityThemes[rarity]} ${className}`}
       data-artwork-status={status}
+      data-artwork-crop={crop}
     >
       {(isLoading || hasError) && (
         <div
@@ -81,6 +86,7 @@ export function CardArtwork({
           src={source}
           alt={`Artwork for ${label}`}
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          style={{ objectPosition }}
           onLoad={() => {
             setIsLoading(false);
             setHasError(false);

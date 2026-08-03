@@ -7,7 +7,7 @@ import type {
 } from '../cards/types';
 import { PageIntro } from '../components/layout/PageIntro';
 import { Card } from '../components/ui/Card';
-import { CollectibleCard } from '../components/ui/CollectibleCard';
+import { CardVisual } from '../components/ui/CardVisual';
 import { Loading } from '../components/ui/Loading';
 export function CollectionPage() {
   const [overview, setOverview] = useState<RarityOverview | null>(null);
@@ -76,8 +76,12 @@ export function CollectionPage() {
         <section className="mt-8" aria-label="Owned cards">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {owned.map((card) => (
-              <Link key={card.slug} to={`/cards/${card.slug}`}>
-                <CollectibleCard card={card} />
+              <Link
+                key={card.slug}
+                to={`/cards/${card.slug}`}
+                className="owned-card-link rounded-2xl"
+              >
+                <CardVisual card={card} variant="compact" owned interactive />
               </Link>
             ))}
           </div>

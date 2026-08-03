@@ -5,7 +5,7 @@ import type { Claim } from '../cards/types';
 import { PageIntro } from '../components/layout/PageIntro';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { CollectibleCard } from '../components/ui/CollectibleCard';
+import { CardVisual } from '../components/ui/CardVisual';
 import { Loading } from '../components/ui/Loading';
 
 export function CardOpeningPage() {
@@ -115,7 +115,7 @@ export function CardOpeningPage() {
           {revealing && <p className="sr-only">Revealing {claim.card.name}</p>}
           <div className="light-burst" aria-hidden="true" />
           <div className="revealed-card">
-            <CollectibleCard card={claim.card} />
+            <CardVisual card={claim.card} variant="reveal" owned />
           </div>
         </div>
       )}
