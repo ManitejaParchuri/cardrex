@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { cardArchiveApi } from '../cards/api';
+import { cardArchiveApi, claimApi } from '../cards/api';
 import {
   rarityMetadata,
   type CollectibleCard as CardData,
@@ -14,6 +14,31 @@ export function CollectionPage() {
   const [rarity, setRarity] = useState<Rarity | ''>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [owned, setOwned] = useState<CardData[]>([]);
+  const [ownedLoading, setOwnedLoading] = useState(true);
+  const [ownedError, setOwnedError] = useState('');
+  useEffect(() => {
+    let current = true;
+    claimApi
+      .collection()
+      .then(({ cards }) => {
+        if (current) setOwned(cards.map((item) => item.card).filter(Boolean));
+      })
+      .catch((reason: unknown) => {
+        if (current)
+          setOwnedError(
+            reason instanceof Error
+              ? reason.message
+              : 'Collection unavailable.',
+          );
+      })
+      .finally(() => {
+        if (current) setOwnedLoading(false);
+      });
+    return () => {
+      current = false;
+    };
+  }, []);
   useEffect(() => {
     let current = true;
     setLoading(true);
@@ -41,25 +66,43 @@ export function CollectionPage() {
       <PageIntro
         eyebrow="The vault"
         title="Your collection"
-        description="Cards you claim in a future phase will appear here. Browsing the archive does not add cards to your vault."
+        description="Cards secured by this guest appear here. The archive remains a separate gallery."
       />
-      <Card className="relative mt-8 grid min-h-48 place-items-center overflow-hidden border-dashed text-center">
-        <div className="relative max-w-sm">
-          <div className="text-3xl" aria-hidden="true">
-            ✧
-          </div>
-          <h2 className="mt-3 text-lg font-bold text-white">
-            Your collection awaits
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-violet-100/55">
-            There are no cards in your vault yet. Card claiming is not
-            implemented.
-          </p>
-          <span className="mt-4 inline-flex rounded-xl border border-violet-300/15 bg-violet-300/[0.07] px-5 py-2 text-sm font-semibold text-violet-200/70">
-            Empty vault
-          </span>
+      {ownedLoading ? (
+        <Loading label="Loading your collection" />
+      ) : ownedError ? (
+        <div
+          role="alert"
+          className="mt-8 rounded-2xl border border-rose-300/25 bg-rose-400/10 p-6 text-rose-100"
+        >
+          {ownedError}
         </div>
-      </Card>
+      ) : owned.length ? (
+        <section className="mt-8" aria-label="Owned cards">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {owned.map((card) => (
+              <CollectibleCard key={card.slug} card={card} />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <Card className="relative mt-8 grid min-h-48 place-items-center overflow-hidden border-dashed text-center">
+          <div className="relative max-w-sm">
+            <div className="text-3xl" aria-hidden="true">
+              ✧
+            </div>
+            <h2 className="mt-3 text-lg font-bold text-white">
+              Your collection awaits
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-violet-100/55">
+              Open your mystery box to place your first card here.
+            </p>
+            <span className="mt-4 inline-flex rounded-xl border border-violet-300/15 bg-violet-300/[0.07] px-5 py-2 text-sm font-semibold text-violet-200/70">
+              <a href="/claim">Open mystery box</a>
+            </span>
+          </div>
+        </Card>
+      )}
       <section className="mt-14" aria-labelledby="archive-title">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>

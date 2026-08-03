@@ -9,10 +9,13 @@ import { guestSessionRouter } from './routes/guestSessions.js';
 import { cardRouter, rarityRouter } from './routes/cards.js';
 import type { CardService } from './services/cards.js';
 import type { GuestSessionService } from './services/guestSessions.js';
+import type { ClaimService } from './services/claims.js';
+import { claimRouter, collectionRouter } from './routes/claims.js';
 export function createApp(
   env: Environment,
   service: GuestSessionService,
   cardService: CardService,
+  claimService?: ClaimService,
 ) {
   const app = express();
   app.disable('x-powered-by');
@@ -32,6 +35,10 @@ export function createApp(
   app.use('/api/guest-sessions', guestSessionRouter(service, cookie));
   app.use('/api/cards', cardRouter(cardService));
   app.use('/api/rarities', rarityRouter);
+  if (claimService) {
+    app.use('/api/claims', claimRouter(service, claimService));
+    app.use('/api/collection', collectionRouter(service, claimService));
+  }
   app.use(notFound);
   app.use(errorHandler);
   return app;

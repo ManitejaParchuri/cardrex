@@ -44,3 +44,19 @@ export interface CardListResponse {
     totalPages: number;
   };
 }
+export interface Claim {
+  id: string;
+  rarity: Rarity;
+  createdAt: string;
+  card: CollectibleCard;
+}
+export interface ClaimStatus {
+  claimed: boolean;
+  claim: Claim | null;
+  card: CollectibleCard | null;
+}
+export interface OwnedCard {
+  obtainedAt: string;
+  claimId: string;
+  card: CollectibleCard;
+}

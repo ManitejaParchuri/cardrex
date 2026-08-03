@@ -16,34 +16,46 @@ const card = {
 };
 afterEach(() => vi.restoreAllMocks());
 describe('CollectionPage archive', () => {
-  it('shows loading while preserving the empty personal collection', () => {
+  it('shows loading for both personal collection and archive', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(() => new Promise(() => undefined)),
     );
     render(<CollectionPage />);
-    expect(screen.getByText('Your collection awaits')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Loading Card Archive',
+    expect(
+      screen.getAllByRole('status').map((item) => item.textContent),
+    ).toEqual(
+      expect.arrayContaining([
+        'Loading your collection',
+        'Loading Card Archive',
+      ]),
     );
   });
   it('shows an archive error state', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
     render(<CollectionPage />);
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Archive signal lost',
-    );
+    expect(await screen.findByText('Archive signal lost')).toBeInTheDocument();
   });
   it('renders rarity metadata and card details', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          cards: [card],
-          pagination: { page: 1, pageSize: 50, total: 1, totalPages: 1 },
+      vi.fn((url: string) =>
+        Promise.resolve({
+          ok: true,
+          json: async () =>
+            url.includes('/collection')
+              ? { cards: [] }
+              : {
+                  cards: [card],
+                  pagination: {
+                    page: 1,
+                    pageSize: 50,
+                    total: 1,
+                    totalPages: 1,
+                  },
+                },
         }),
-      }),
+      ),
     );
     render(<CollectionPage />);
     expect(

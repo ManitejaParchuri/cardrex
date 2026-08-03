@@ -34,6 +34,8 @@ model Card {
   active             Boolean  @default(true)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+  guestCards         GuestCard[]
+  claims             CardClaim[]
 
   @@index([active, rarity, collectionNumber])
 }
@@ -46,6 +48,37 @@ model GuestSession {
   updatedAt        DateTime  @updatedAt
   expiresAt        DateTime
   revokedAt        DateTime?
+  guestCards       GuestCard[]
+  claims           CardClaim[]
 
   @@index([expiresAt])
+}
+
+model CardClaim {
+  id              String       @id @default(uuid()) @db.Uuid
+  guestSessionId  String       @unique @db.Uuid
+  cardId          String       @db.Uuid
+  rarity          Rarity
+  idempotencyKey  String       @unique @db.Uuid
+  createdAt       DateTime     @default(now())
+  guestSession    GuestSession @relation(fields: [guestSessionId], references: [id], onDelete: Restrict)
+  card            Card         @relation(fields: [cardId], references: [id], onDelete: Restrict)
+  ownership       GuestCard?
+
+  @@index([guestSessionId, createdAt])
+  @@index([cardId])
+}
+
+model GuestCard {
+  id              String       @id @default(uuid()) @db.Uuid
+  guestSessionId  String       @unique @db.Uuid
+  cardId          String       @db.Uuid
+  obtainedAt      DateTime     @default(now())
+  claimId         String       @unique @db.Uuid
+  guestSession    GuestSession @relation(fields: [guestSessionId], references: [id], onDelete: Restrict)
+  card            Card         @relation(fields: [cardId], references: [id], onDelete: Restrict)
+  claim           CardClaim    @relation(fields: [claimId], references: [id], onDelete: Restrict)
+
+  @@index([guestSessionId, obtainedAt])
+  @@index([cardId])
 }
