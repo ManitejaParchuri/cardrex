@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom';
 
 import { PageIntro } from '../components/layout/PageIntro';
+import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 
 export function CardOpeningPage() {
   return (
     <div className="mx-auto grid w-full max-w-xl content-center py-8 text-center sm:py-14">
       <PageIntro
-        eyebrow="One discovery awaits"
-        title="Claim your card"
-        description="The secure card-opening experience will be connected in the next phase."
+        eyebrow="Mystery vault preview"
+        title="The vault is not active yet"
+        description="Card claiming unlocks in the next phase. For now, enjoy a preview of the secure card-opening experience."
       />
       <Card className="vault-float relative mx-auto mt-10 aspect-square w-full max-w-sm overflow-hidden border-violet-300/30 bg-[radial-gradient(circle_at_50%_45%,rgba(139,92,246,0.3),transparent_48%)] shadow-[0_25px_80px_rgba(76,29,149,0.3)]">
         <div className="vault-orbit absolute inset-8 rounded-full border border-dashed border-violet-200/20" />
@@ -21,6 +22,15 @@ export function CardOpeningPage() {
             </div>
             <p className="mt-6 text-sm font-bold tracking-[0.2em] text-violet-200 uppercase">
               Mystery box sealed
+            </p>
+            <Button className="mt-7" disabled aria-describedby="claim-status">
+              Open mystery vault
+            </Button>
+            <p
+              id="claim-status"
+              className="mt-3 text-xs font-medium text-violet-200/55"
+            >
+              Claiming is currently unavailable
             </p>
           </div>
         </div>

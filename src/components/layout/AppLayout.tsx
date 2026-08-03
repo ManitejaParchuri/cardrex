@@ -6,6 +6,10 @@ import { useGuestSession } from '../../guest/GuestSessionContext';
 export function AppLayout() {
   const navigate = useNavigate();
   const { session, isLoading, resetSession } = useGuestSession();
+  const guestDisplayName =
+    typeof session?.displayName === 'string' && session.displayName.trim()
+      ? session.displayName.trim()
+      : 'Cosmic guest';
   const stars = [
     ['8%', '18%', '2px', '4.6s', '-1s'],
     ['18%', '72%', '3px', '5.2s', '-3s'],
@@ -57,9 +61,7 @@ export function AppLayout() {
             <>
               <span className="hidden text-sm text-violet-100/70 sm:inline">
                 Guest:{' '}
-                <strong className="text-violet-100">
-                  {session.displayName}
-                </strong>
+                <strong className="text-violet-100">{guestDisplayName}</strong>
               </span>
               <button
                 type="button"
