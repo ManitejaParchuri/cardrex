@@ -1,0 +1,66 @@
+[
+  {
+    "name": "COMMON",
+    "displayName": "Common",
+    "visualLabel": "Starlit",
+    "borderStyle": "slate",
+    "glowStyle": "soft",
+    "sortOrder": 1
+  },
+  {
+    "name": "UNCOMMON",
+    "displayName": "Uncommon",
+    "visualLabel": "Verdant",
+    "borderStyle": "emerald",
+    "glowStyle": "verdant",
+    "sortOrder": 2
+  },
+  {
+    "name": "RARE",
+    "displayName": "Rare",
+    "visualLabel": "Azure",
+    "borderStyle": "sky",
+    "glowStyle": "azure",
+    "sortOrder": 3
+  },
+  {
+    "name": "EPIC",
+    "displayName": "Epic",
+    "visualLabel": "Astral",
+    "borderStyle": "violet",
+    "glowStyle": "astral",
+    "sortOrder": 4
+  },
+  {
+    "name": "LEGENDARY",
+    "displayName": "Legendary",
+    "visualLabel": "Solar",
+    "borderStyle": "amber",
+    "glowStyle": "solar",
+    "sortOrder": 5
+  },
+  {
+    "name": "MYTHIC",
+    "displayName": "Mythic",
+    "visualLabel": "Crimson",
+    "borderStyle": "rose",
+    "glowStyle": "mythic",
+    "sortOrder": 6
+  },
+  {
+    "name": "RAINBOW",
+    "displayName": "Rainbow",
+    "visualLabel": "Prismatic",
+    "borderStyle": "rainbow",
+    "glowStyle": "prismatic",
+    "sortOrder": 7
+  },
+  {
+    "name": "SECRET",
+    "displayName": "Secret",
+    "visualLabel": "Eclipse",
+    "borderStyle": "obsidian",
+    "glowStyle": "eclipse",
+    "sortOrder": 8
+  }
+]

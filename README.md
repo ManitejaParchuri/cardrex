@@ -3,8 +3,8 @@
 Cardrex is a mobile-first digital collectible card experience. This repository currently
 contains the Phase 1 web foundation and Phase 1.5 cosmic interface polish. Phase 2 adds a
 validated guest identity and temporary, browser-persisted session flow while preserving the
-existing route placeholders and reusable UI primitives. Secure claims remain reserved for
-later phases.
+existing route placeholders and reusable UI primitives. Phase 4 adds the read-only Card
+Archive, while secure claims remain reserved for later phases.
 
 ## Prerequisites
 
@@ -38,6 +38,7 @@ secrets in a `VITE_` variable. The included values are placeholders for future A
 | `npm run format`       | Format supported files with Prettier.                |
 | `npm run format:check` | Check formatting without changing files.             |
 | `npm test`             | Run the Vitest suite once.                           |
+| `npm run db:seed`      | Upsert the deterministic 32-card archive.            |
 
 ## Routes
 
@@ -81,9 +82,32 @@ Phase 3 replaces browser persistence with a backend-issued, HTTP-only cookie. Us
 ## Current scope limitations
 
 - Guest sessions provide temporary pseudonymous access, not registered accounts.
-- Sign-in, rarity selection, card persistence, and the reveal animation are not implemented yet.
-- All visible symbols and presentation are original interface elements; character artwork
-  will be introduced with recorded provenance in a later phase.
+- Claiming, random rarity selection, ownership, sign-in, trading, payments, and the mystery-box reveal are not implemented.
+- Card character concepts and text are original. Artwork currently uses local placeholder paths and gracefully falls back to a cosmic silhouette.
+
+## Phase 4: Card Archive
+
+`Card` stores a UUID identity, unique slug and collection number, rarity, original character
+copy, non-negative attack and defense stats, ability copy, placeholder image path, active
+publication state, and timestamps. The database migration also enforces non-negative stats.
+Only explicitly selected public fields leave the API; internal IDs, activity flags, and
+timestamps are not serialized.
+
+The rarity ladder, in ascending display order, is **Common**, **Uncommon**, **Rare**, **Epic**,
+**Legendary**, **Mythic**, **Rainbow**, and **Secret**. Shared display metadata supplies visual
+labels and style identifiers without storing CSS classes in PostgreSQL. Phase 4 does not assign
+probabilities and does not perform random selection.
+
+After PostgreSQL is running, apply migrations and seed the archive:
+
+```bash
+npm run prisma:migrate
+npm run db:seed
+```
+
+The seed uses slug-keyed upserts, so it can be run repeatedly without creating duplicates.
+For non-interactive deployment environments, apply committed migrations with
+`npm --prefix server exec prisma migrate deploy`.
 
 ## Phase 3 development
 
@@ -97,12 +121,19 @@ Run the frontend with `npm run dev:frontend` and the API with `npm run dev:backe
 
 ### API
 
-| Method   | Endpoint                 | Purpose                                                               |
-| -------- | ------------------------ | --------------------------------------------------------------------- |
-| `GET`    | `/api/health`            | API readiness response                                                |
-| `POST`   | `/api/guest-sessions`    | Validate a display name, create a guest session, and issue its cookie |
-| `GET`    | `/api/guest-sessions/me` | Restore the valid guest represented by the cookie                     |
-| `DELETE` | `/api/guest-sessions/me` | Revoke the current guest session and clear its cookie                 |
+| Method   | Endpoint                 | Purpose                                                                  |
+| -------- | ------------------------ | ------------------------------------------------------------------------ |
+| `GET`    | `/api/health`            | API readiness response                                                   |
+| `POST`   | `/api/guest-sessions`    | Validate a display name, create a guest session, and issue its cookie    |
+| `GET`    | `/api/guest-sessions/me` | Restore the valid guest represented by the cookie                        |
+| `DELETE` | `/api/guest-sessions/me` | Revoke the current guest session and clear its cookie                    |
+| `GET`    | `/api/cards`             | List active cards; accepts `rarity`, `page`, and `pageSize` (maximum 50) |
+| `GET`    | `/api/cards/:slug`       | Fetch one active public card by slug                                     |
+| `GET`    | `/api/rarities`          | List rarity names and display metadata                                   |
+
+The Card Archive is discovery-only: viewing a card never grants ownership. Claim APIs,
+guest collections, mystery-box opening, and duplicate-card behavior remain intentionally
+unimplemented.
 
 Requests from the frontend include credentials. Set `FRONTEND_ORIGIN` to the exact permitted browser origin. `COOKIE_SAME_SITE=lax` is appropriate for same-site deployments; use `none` only for a genuinely cross-site HTTPS deployment (production cookies are always `Secure`).
 

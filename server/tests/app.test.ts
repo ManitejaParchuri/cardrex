@@ -2,6 +2,11 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
 import {
+  CardService,
+  type CardRepository,
+  type PublicCard,
+} from '../src/services/cards.js';
+import {
   GuestSessionService,
   hashToken,
   type Guest,
@@ -37,8 +42,67 @@ const env = {
 } as const;
 const setup = (ttl = 30) => {
   const repo = new MemoryRepo();
-  return { repo, app: createApp(env, new GuestSessionService(repo, ttl)) };
+  const cards = new MemoryCardRepo();
+  return {
+    repo,
+    cards,
+    app: createApp(
+      env,
+      new GuestSessionService(repo, ttl),
+      new CardService(cards),
+    ),
+  };
 };
+const sample = (overrides: Partial<PublicCard> = {}): PublicCard => ({
+  name: 'Ari Vale',
+  slug: 'ari-vale',
+  rarity: 'COMMON',
+  description: 'Courier',
+  lore: 'Maps stars.',
+  attack: 18,
+  defense: 22,
+  abilityName: 'Comet Dash',
+  abilityDescription: 'Moves quickly.',
+  imageUrl: '/card-art/ari.webp',
+  collectionNumber: 1,
+  ...overrides,
+});
+class MemoryCardRepo implements CardRepository {
+  rows = [
+    sample(),
+    sample({
+      name: 'Iona Prismark',
+      slug: 'iona-prismark',
+      rarity: 'RARE',
+      collectionNumber: 2,
+    }),
+    sample({ name: 'Hidden', slug: 'hidden', collectionNumber: 3 }),
+  ];
+  inactive = new Set(['hidden']);
+  visible(rarity?: PublicCard['rarity']) {
+    return this.rows.filter(
+      (card) =>
+        !this.inactive.has(card.slug) && (!rarity || card.rarity === rarity),
+    );
+  }
+  async list({
+    rarity,
+    skip,
+    take,
+  }: {
+    rarity?: PublicCard['rarity'];
+    skip: number;
+    take: number;
+  }) {
+    return this.visible(rarity).slice(skip, skip + take);
+  }
+  async count(rarity?: PublicCard['rarity']) {
+    return this.visible(rarity).length;
+  }
+  async findBySlug(slug: string) {
+    return this.visible().find((card) => card.slug === slug) ?? null;
+  }
+}
 describe('API', () => {
   it('reports health', async () =>
     expect((await request(setup().app).get('/api/health')).body).toEqual({
@@ -84,5 +148,55 @@ describe('API', () => {
     await agent.delete('/api/guest-sessions/me').expect(204);
     expect((await repo.findByHash(hashToken(raw)))?.revokedAt).not.toBeNull();
     await agent.get('/api/guest-sessions/me').expect(401);
+  });
+  it('lists active cards without internal fields', async () => {
+    const response = await request(setup().app).get('/api/cards').expect(200);
+    expect(response.body.cards).toHaveLength(2);
+    expect(response.body.cards[0]).not.toHaveProperty('id');
+    expect(
+      response.body.cards.map((card: PublicCard) => card.slug),
+    ).not.toContain('hidden');
+  });
+  it('filters cards by rarity', async () => {
+    const response = await request(setup().app)
+      .get('/api/cards?rarity=RARE')
+      .expect(200);
+    expect(response.body.cards.map((card: PublicCard) => card.rarity)).toEqual([
+      'RARE',
+    ]);
+  });
+  it('paginates cards and caps page size', async () => {
+    const response = await request(setup().app)
+      .get('/api/cards?page=2&pageSize=1')
+      .expect(200);
+    expect(response.body.cards[0].slug).toBe('iona-prismark');
+    expect(response.body.pagination).toEqual({
+      page: 2,
+      pageSize: 1,
+      total: 2,
+      totalPages: 2,
+    });
+    await request(setup().app).get('/api/cards?pageSize=51').expect(400);
+  });
+  it('returns card detail and excludes inactive cards', async () => {
+    expect(
+      (await request(setup().app).get('/api/cards/ari-vale').expect(200)).body
+        .card.name,
+    ).toBe('Ari Vale');
+    await request(setup().app).get('/api/cards/hidden').expect(404);
+    await request(setup().app).get('/api/cards/missing').expect(404);
+  });
+  it('rejects invalid rarity values', async () => {
+    await request(setup().app).get('/api/cards?rarity=ULTRA').expect(400);
+  });
+  it('publishes rarity display metadata', async () => {
+    const response = await request(setup().app)
+      .get('/api/rarities')
+      .expect(200);
+    expect(response.body.rarities).toHaveLength(8);
+    expect(response.body.rarities[7]).toMatchObject({
+      name: 'SECRET',
+      sortOrder: 8,
+    });
   });
 });
