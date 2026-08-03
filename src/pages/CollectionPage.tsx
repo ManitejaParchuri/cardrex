@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom';
-
 import { PageIntro } from '../components/layout/PageIntro';
 import { Card } from '../components/ui/Card';
 
@@ -9,7 +7,7 @@ export function CollectionPage() {
       <PageIntro
         eyebrow="The vault"
         title="Your collection"
-        description="Every original character you discover will appear here. Your first card is waiting to be claimed."
+        description="Every original character you discover will appear here when card claiming becomes available."
       />
       <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-5" aria-hidden="true">
         {[0, 1, 2].map((slot) => (
@@ -36,17 +34,15 @@ export function CollectionPage() {
             ✧
           </div>
           <h2 className="mt-5 text-lg font-bold text-white">
-            The vault is quiet
+            Your collection awaits
           </h2>
           <p className="mt-2 text-sm leading-6 text-violet-100/55">
-            Claim a mystery card to begin your cosmic collection.
+            There are no cards in your vault yet. Card claiming unlocks in the
+            next phase.
           </p>
-          <Link
-            to="/claim"
-            className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 px-5 text-sm font-bold text-white shadow-lg shadow-violet-950/30 transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98]"
-          >
-            Go to claim
-          </Link>
+          <div className="mt-5 inline-flex min-h-11 items-center rounded-xl border border-violet-300/15 bg-violet-300/[0.07] px-5 text-sm font-semibold text-violet-200/70">
+            Empty vault
+          </div>
         </div>
       </Card>
     </div>
