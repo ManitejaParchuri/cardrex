@@ -30,7 +30,10 @@ export function GuestUsernamePage() {
       />
       <Card className="mt-8">
         <form onSubmit={submit} noValidate>
-          <label htmlFor="username" className="text-sm font-semibold text-violet-50">
+          <label
+            htmlFor="username"
+            className="text-sm font-semibold text-violet-50"
+          >
             Guest username
           </label>
           <input

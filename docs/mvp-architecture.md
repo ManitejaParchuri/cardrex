@@ -10,18 +10,18 @@ authentication, claims, and collections. Organize the code into domain modules s
 the claim service can be extracted later, without accepting the operational overhead of
 microservices during validation.
 
-| Area | MVP choice | Reason |
-| --- | --- | --- |
-| Web and API | Next.js (App Router) + TypeScript | One mobile-first application, server rendering, route handlers, and a small deployment surface. |
-| UI | React, CSS Modules or Tailwind, reduced-motion variants | Fast construction of a cinematic responsive UI while preserving accessible motion controls. |
-| Database | Managed PostgreSQL | Transactions and constraints make claims and ownership reliable. |
-| Data access | Prisma ORM with checked-in migrations | Typed queries, explicit schema changes, and transaction support. |
-| Authentication | Auth.js with database sessions and an email magic-link or one office-approved OIDC provider | Avoid custom password storage and keep account/session lifecycle server-side. |
+| Area           | MVP choice                                                                                                                 | Reason                                                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Web and API    | Next.js (App Router) + TypeScript                                                                                          | One mobile-first application, server rendering, route handlers, and a small deployment surface.                               |
+| UI             | React, CSS Modules or Tailwind, reduced-motion variants                                                                    | Fast construction of a cinematic responsive UI while preserving accessible motion controls.                                   |
+| Database       | Managed PostgreSQL                                                                                                         | Transactions and constraints make claims and ownership reliable.                                                              |
+| Data access    | Prisma ORM with checked-in migrations                                                                                      | Typed queries, explicit schema changes, and transaction support.                                                              |
+| Authentication | Auth.js with database sessions and an email magic-link or one office-approved OIDC provider                                | Avoid custom password storage and keep account/session lifecycle server-side.                                                 |
 | Guest identity | Opaque, random, session-lifetime token in a `Secure`, `HttpOnly`, `SameSite=Lax` cookie; store only its hash in PostgreSQL | Refreshes and navigation in the same browser session recover the guest without exposing an identity credential to JavaScript. |
-| Validation | Zod schemas at every HTTP boundary | Share request/response types while treating browser input as untrusted. |
-| Artwork | Original optimized AVIF/WebP assets in object storage behind a CDN | Keeps binaries outside the database and supports responsive delivery. |
-| Testing | Vitest, React Testing Library, and Playwright | Covers domain logic, UI states, API integration, and the mobile claim flow. |
-| Observability | Structured server logs, request IDs, error reporting, and basic claim counters | Enough evidence to diagnose failures without logging secrets. |
+| Validation     | Zod schemas at every HTTP boundary                                                                                         | Share request/response types while treating browser input as untrusted.                                                       |
+| Artwork        | Original optimized AVIF/WebP assets in object storage behind a CDN                                                         | Keeps binaries outside the database and supports responsive delivery.                                                         |
+| Testing        | Vitest, React Testing Library, and Playwright                                                                              | Covers domain logic, UI states, API integration, and the mobile claim flow.                                                   |
+| Observability  | Structured server logs, request IDs, error reporting, and basic claim counters                                             | Enough evidence to diagnose failures without logging secrets.                                                                 |
 
 Deploy the application and database in the same region. Use a pooled database
 connection appropriate to the host. A Redis dependency is not necessary initially:
@@ -296,22 +296,22 @@ to import them.
 
 ## 5. Security and privacy risks
 
-| Risk | Required mitigation |
-| --- | --- |
-| Browser manipulates rarity/card | Ignore all requested award fields; select from server-loaded eligible rows with cryptographic randomness and return only the committed result. |
-| Duplicate or concurrent claims | Database transaction, identity/campaign unique constraints, row locking where inventory is finite, and scoped idempotency keys. Never rely only on a disabled button. |
-| Guessable QR URL or replay | Treat QR IDs as public; enforce eligibility and limits on every claim. Rotate/disable campaigns when needed. Do not put bearer credentials in the QR URL. |
-| Guest session theft/fixation | At least 256 bits of randomness, hashed token storage, secure HttpOnly session cookie, token rotation after privilege changes, expiry/revocation, and no tokens in logs or URLs. |
-| Unsafe account merge | Require a freshly authenticated target account and the current guest credential; lock both, allow one merge, and record the event. Never accept arbitrary identity IDs. |
-| CSRF | SameSite cookies, Auth.js protections, origin validation for mutations, and framework-supported anti-CSRF tokens where appropriate. |
-| XSS and asset injection | React escaping, strict validation, no untrusted HTML, a restrictive CSP with nonces, allowlisted image origins, and safe security headers. |
-| SQL injection/mass assignment | Parameterized ORM calls, explicit input schemas, explicit selected/updated fields, and least-privilege database credentials. |
-| Brute force/abuse and denial of inventory | Layered IP plus identity limits, request/body/time limits, monitoring, and WAF rules. Avoid permanent decisions based only on shared-office IPs. |
-| Information leakage | Generic external errors, authorization before existence checks, redacted structured logs, no source maps/secrets exposed publicly, and no unpublished catalogue data in bundles. |
-| Biased or predictable odds | Crypto RNG, integer weights, reviewed configuration, boundary/statistical tests, versioned rule snapshots, and no modulo reduction unless the crypto API guarantees unbiased ranges. |
-| Broken authorization | Central policy functions, deny by default, object-level checks on every collection/card operation, and negative integration tests. |
-| Supply-chain/secrets risk | Lockfile, automated dependency review, secret manager, scoped credentials, rotation plan, and CI scanning. |
-| Original-art rights/privacy | Provenance and approval records, metadata stripping where appropriate, takedown process, minimal personal-data collection, retention rules, and a privacy notice. |
+| Risk                                      | Required mitigation                                                                                                                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Browser manipulates rarity/card           | Ignore all requested award fields; select from server-loaded eligible rows with cryptographic randomness and return only the committed result.                                       |
+| Duplicate or concurrent claims            | Database transaction, identity/campaign unique constraints, row locking where inventory is finite, and scoped idempotency keys. Never rely only on a disabled button.                |
+| Guessable QR URL or replay                | Treat QR IDs as public; enforce eligibility and limits on every claim. Rotate/disable campaigns when needed. Do not put bearer credentials in the QR URL.                            |
+| Guest session theft/fixation              | At least 256 bits of randomness, hashed token storage, secure HttpOnly session cookie, token rotation after privilege changes, expiry/revocation, and no tokens in logs or URLs.     |
+| Unsafe account merge                      | Require a freshly authenticated target account and the current guest credential; lock both, allow one merge, and record the event. Never accept arbitrary identity IDs.              |
+| CSRF                                      | SameSite cookies, Auth.js protections, origin validation for mutations, and framework-supported anti-CSRF tokens where appropriate.                                                  |
+| XSS and asset injection                   | React escaping, strict validation, no untrusted HTML, a restrictive CSP with nonces, allowlisted image origins, and safe security headers.                                           |
+| SQL injection/mass assignment             | Parameterized ORM calls, explicit input schemas, explicit selected/updated fields, and least-privilege database credentials.                                                         |
+| Brute force/abuse and denial of inventory | Layered IP plus identity limits, request/body/time limits, monitoring, and WAF rules. Avoid permanent decisions based only on shared-office IPs.                                     |
+| Information leakage                       | Generic external errors, authorization before existence checks, redacted structured logs, no source maps/secrets exposed publicly, and no unpublished catalogue data in bundles.     |
+| Biased or predictable odds                | Crypto RNG, integer weights, reviewed configuration, boundary/statistical tests, versioned rule snapshots, and no modulo reduction unless the crypto API guarantees unbiased ranges. |
+| Broken authorization                      | Central policy functions, deny by default, object-level checks on every collection/card operation, and negative integration tests.                                                   |
+| Supply-chain/secrets risk                 | Lockfile, automated dependency review, secret manager, scoped credentials, rotation plan, and CI scanning.                                                                           |
+| Original-art rights/privacy               | Provenance and approval records, metadata stripping where appropriate, takedown process, minimal personal-data collection, retention rules, and a privacy notice.                    |
 
 Avoid fingerprinting as a substitute for identity: it is privacy-invasive and unreliable.
 Guest recovery is deliberately limited to possession of the session cookie. If recovery

@@ -30,6 +30,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  overflow-x: hidden;
 }
 
 button,
@@ -46,16 +47,25 @@ input:focus-visible {
 }
 
 .cosmic-shell {
+  position: relative;
   background:
-    radial-gradient(circle at 14% 12%, rgb(124 58 237 / 22%), transparent 28rem),
-    radial-gradient(circle at 92% 58%, rgb(14 165 233 / 13%), transparent 30rem),
+    radial-gradient(
+      circle at 14% 12%,
+      rgb(124 58 237 / 25%),
+      transparent 28rem
+    ),
+    radial-gradient(
+      circle at 92% 58%,
+      rgb(14 165 233 / 15%),
+      transparent 30rem
+    ),
     linear-gradient(160deg, #080613 0%, #100a20 55%, #070611 100%);
 }
 
 .cosmic-shell::before {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   background-image:
     radial-gradient(circle, rgb(255 255 255 / 55%) 0 1px, transparent 1.5px),
     radial-gradient(circle, rgb(196 181 253 / 42%) 0 1px, transparent 1.5px);
@@ -67,6 +77,91 @@ input:focus-visible {
     117px 117px;
   content: '';
   opacity: 0.28;
+  animation: star-drift 28s linear infinite;
+}
+
+.cosmic-shell::after {
+  position: fixed;
+  inset: -25%;
+  z-index: -3;
+  background:
+    radial-gradient(circle at 28% 38%, rgb(147 51 234 / 18%), transparent 22%),
+    radial-gradient(circle at 68% 55%, rgb(14 165 233 / 11%), transparent 24%);
+  content: '';
+  filter: blur(30px);
+  animation: nebula-drift 20s ease-in-out infinite alternate;
+}
+
+.star-field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  width: var(--star-size, 3px);
+  height: var(--star-size, 3px);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 10px rgb(196 181 253 / 80%);
+  opacity: 0.18;
+  animation: twinkle var(--star-speed, 4s) ease-in-out infinite;
+  animation-delay: var(--star-delay, 0s);
+}
+
+.vault-float {
+  animation: vault-float 5s ease-in-out infinite;
+}
+
+.vault-orbit {
+  animation: orbit 18s linear infinite;
+}
+
+.shimmer {
+  background-size: 200% auto;
+  animation: shimmer 6s linear infinite;
+}
+
+@keyframes twinkle {
+  50% {
+    opacity: 0.9;
+    transform: scale(1.7);
+  }
+}
+
+@keyframes star-drift {
+  to {
+    background-position:
+      82px 82px,
+      -83px 165px;
+  }
+}
+
+@keyframes nebula-drift {
+  to {
+    transform: translate3d(3%, -2%, 0) scale(1.08) rotate(3deg);
+  }
+}
+
+@keyframes vault-float {
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+}
+
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

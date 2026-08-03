@@ -28,25 +28,25 @@ secrets in a `VITE_` variable. The included values are placeholders for future A
 
 ## Available commands
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the Vite development server. |
-| `npm run build` | Type-check and create a production build in `dist/`. |
-| `npm run preview` | Serve the production build locally. |
-| `npm run lint` | Run ESLint. |
-| `npm run format` | Format supported files with Prettier. |
-| `npm run format:check` | Check formatting without changing files. |
-| `npm test` | Run the Vitest suite once. |
+| Command                | Purpose                                              |
+| ---------------------- | ---------------------------------------------------- |
+| `npm run dev`          | Start the Vite development server.                   |
+| `npm run build`        | Type-check and create a production build in `dist/`. |
+| `npm run preview`      | Serve the production build locally.                  |
+| `npm run lint`         | Run ESLint.                                          |
+| `npm run format`       | Format supported files with Prettier.                |
+| `npm run format:check` | Check formatting without changing files.             |
+| `npm test`             | Run the Vitest suite once.                           |
 
 ## Routes
 
-| Route | Screen |
-| --- | --- |
-| `/` | Landing page |
-| `/guest` | Temporary guest username |
-| `/sign-in` | Account sign-in placeholder |
-| `/claim` | Card-opening placeholder |
-| `/collection` | Collection placeholder |
+| Route         | Screen                      |
+| ------------- | --------------------------- |
+| `/`           | Landing page                |
+| `/guest`      | Temporary guest username    |
+| `/sign-in`    | Account sign-in placeholder |
+| `/claim`      | Card-opening placeholder    |
+| `/collection` | Collection placeholder      |
 
 ## Project layout
 

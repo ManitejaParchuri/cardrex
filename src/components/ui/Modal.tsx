@@ -47,14 +47,16 @@ export function Modal({ children, isOpen, onClose, title }: ModalProps) {
           <Button
             ref={closeButtonRef}
             variant="ghost"
-            className="-mr-2 -mt-2 min-h-11 px-3 text-xl"
+            className="-mt-2 -mr-2 min-h-11 px-3 text-xl"
             onClick={onClose}
             aria-label="Close dialog"
           >
             ×
           </Button>
         </div>
-        <div className="mt-4 text-sm leading-6 text-violet-100/70">{children}</div>
+        <div className="mt-4 text-sm leading-6 text-violet-100/70">
+          {children}
+        </div>
       </section>
     </div>
   );

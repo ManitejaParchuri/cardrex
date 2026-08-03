@@ -11,10 +11,12 @@ export function CardOpeningPage() {
         title="Claim your card"
         description="The secure card-opening experience will be connected in the next phase."
       />
-      <Card className="relative mx-auto mt-8 aspect-square w-full max-w-sm overflow-hidden border-violet-300/20 bg-[radial-gradient(circle_at_50%_45%,rgba(139,92,246,0.26),transparent_45%)]">
+      <Card className="vault-float relative mx-auto mt-10 aspect-square w-full max-w-sm overflow-hidden border-violet-300/30 bg-[radial-gradient(circle_at_50%_45%,rgba(139,92,246,0.3),transparent_48%)] shadow-[0_25px_80px_rgba(76,29,149,0.3)]">
+        <div className="vault-orbit absolute inset-8 rounded-full border border-dashed border-violet-200/20" />
         <div className="grid h-full place-items-center">
           <div>
-            <div className="mx-auto grid size-28 place-items-center rounded-[2rem] border border-violet-200/25 bg-gradient-to-br from-violet-400/20 to-fuchsia-500/10 text-6xl shadow-[0_0_60px_rgba(139,92,246,0.35)]">
+            <div className="relative mx-auto grid size-32 place-items-center rounded-[2.25rem] border border-violet-200/35 bg-gradient-to-br from-violet-400/25 to-sky-500/10 text-6xl shadow-[inset_0_0_30px_rgba(167,139,250,0.15),0_0_60px_rgba(139,92,246,0.4)]">
+              <span className="absolute inset-3 rounded-[1.6rem] border border-white/10" />
               ◈
             </div>
             <p className="mt-6 text-sm font-bold tracking-[0.2em] text-violet-200 uppercase">
