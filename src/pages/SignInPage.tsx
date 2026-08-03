@@ -20,7 +20,11 @@ export function SignInPage() {
         <Button fullWidth onClick={() => setShowNotice(true)}>
           Continue with email
         </Button>
-        <Button fullWidth variant="secondary" onClick={() => setShowNotice(true)}>
+        <Button
+          fullWidth
+          variant="secondary"
+          onClick={() => setShowNotice(true)}
+        >
           Continue with company account
         </Button>
         <p className="pt-2 text-center text-xs text-violet-100/45">
@@ -36,8 +40,8 @@ export function SignInPage() {
         title="Sign-in is on its way"
       >
         <p>
-          Secure account authentication will arrive in a later phase. Continue as a guest
-          to preview the claim experience.
+          Secure account authentication will arrive in a later phase. Continue
+          as a guest to preview the claim experience.
         </p>
       </Modal>
     </div>

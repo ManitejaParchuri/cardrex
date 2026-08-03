@@ -20,7 +20,9 @@ describe('GuestUsernamePage', () => {
     const input = screen.getByLabelText('Guest username');
     await userEvent.clear(input);
     await userEvent.type(input, 'ab');
-    await userEvent.click(screen.getByRole('button', { name: 'Enter the vault' }));
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Enter the vault' }),
+    );
 
     expect(screen.getByRole('alert')).toHaveTextContent('between 3 and 24');
   });
@@ -38,7 +40,9 @@ describe('GuestUsernamePage', () => {
     const input = screen.getByLabelText('Guest username');
     await userEvent.clear(input);
     await userEvent.type(input, 'NovaScout');
-    await userEvent.click(screen.getByRole('button', { name: 'Enter the vault' }));
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Enter the vault' }),
+    );
 
     expect(sessionStorage.getItem('cardrex-guest-name')).toBe('NovaScout');
     expect(screen.getByText('Claim screen')).toBeInTheDocument();
