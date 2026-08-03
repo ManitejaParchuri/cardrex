@@ -3,6 +3,8 @@ import { prisma } from './config/database.js';
 import { readEnvironment } from './config/env.js';
 import { GuestSessionService } from './services/guestSessions.js';
 import { prismaGuestSessionRepository } from './services/prismaGuestSessionRepository.js';
+import { CardService } from './services/cards.js';
+import { prismaCardRepository } from './services/prismaCardRepository.js';
 const env = readEnvironment();
 const app = createApp(
   env,
@@ -10,6 +12,7 @@ const app = createApp(
     prismaGuestSessionRepository(prisma),
     env.GUEST_SESSION_TTL_DAYS,
   ),
+  new CardService(prismaCardRepository(prisma)),
 );
 const server = app.listen(env.PORT, () =>
   console.log(`Cardrex API listening on ${env.PORT}`),

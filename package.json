@@ -17,6 +17,9 @@
     "db:down": "docker compose down",
     "prisma:migrate": "npm --prefix server run prisma:migrate",
     "prisma:validate": "npm --prefix server run prisma:validate",
+    "prisma:generate": "npm --prefix server run prisma:generate",
+    "prisma:migrate:check": "npm --prefix server run prisma:migrate:check",
+    "db:seed": "npm --prefix server run db:seed",
     "test:frontend": "vitest run",
     "test:backend": "npm --prefix server test",
     "test:all": "npm test && npm run test:backend"

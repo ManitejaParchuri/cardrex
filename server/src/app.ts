@@ -6,8 +6,14 @@ import morgan from 'morgan';
 import type { Environment } from './config/env.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 import { guestSessionRouter } from './routes/guestSessions.js';
+import { cardRouter, rarityRouter } from './routes/cards.js';
+import type { CardService } from './services/cards.js';
 import type { GuestSessionService } from './services/guestSessions.js';
-export function createApp(env: Environment, service: GuestSessionService) {
+export function createApp(
+  env: Environment,
+  service: GuestSessionService,
+  cardService: CardService,
+) {
   const app = express();
   app.disable('x-powered-by');
   app.use(helmet());
@@ -24,6 +30,8 @@ export function createApp(env: Environment, service: GuestSessionService) {
     maxAge: env.GUEST_SESSION_TTL_DAYS * 86400000,
   } as const;
   app.use('/api/guest-sessions', guestSessionRouter(service, cookie));
+  app.use('/api/cards', cardRouter(cardService));
+  app.use('/api/rarities', rarityRouter);
   app.use(notFound);
   app.use(errorHandler);
   return app;
