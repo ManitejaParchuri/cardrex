@@ -323,3 +323,14 @@ input:focus-visible {
     display: none;
   }
 }
+.claim-vault .vault-glow,
+.claim-vault::before,
+.claim-vault::after {
+  pointer-events: none;
+}
+
+.claim-vault button {
+  position: relative;
+  z-index: 20;
+  cursor: pointer;
+}

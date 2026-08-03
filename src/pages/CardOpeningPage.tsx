@@ -81,8 +81,11 @@ export function CardOpeningPage() {
         <Card
           className={`claim-vault relative mx-auto mt-10 aspect-square w-full max-w-sm overflow-hidden border-violet-300/30 ${opening ? 'is-opening' : ''}`}
         >
-          <div className="vault-glow absolute inset-8 rounded-full border border-dashed border-violet-200/20" />
-          <div className="grid h-full place-items-center">
+         <div
+  className="vault-glow pointer-events-none absolute inset-8 rounded-full border border-dashed border-violet-200/20"
+  aria-hidden="true"
+/>
+          <div className="relative z-10 grid h-full place-items-center">
             <div>
               <div className="mystery-box relative mx-auto grid size-32 place-items-center rounded-[2.25rem] border border-violet-200/35 bg-gradient-to-br from-violet-400/30 to-sky-500/10 text-6xl">
                 ◈
@@ -91,16 +94,16 @@ export function CardOpeningPage() {
                 Mystery box sealed
               </p>
               <Button
-                className="mt-7 touch-manipulation"
-                disabled={opening}
-                onClick={() => void open()}
-              >
-                {opening
-                  ? 'Opening vault…'
-                  : error
-                    ? 'Retry opening'
-                    : 'Open Mystery Box'}
-              </Button>
+  className="relative z-20 mt-7 cursor-pointer touch-manipulation"
+  disabled={opening}
+  onClick={() => void open()}
+>
+  {opening
+    ? 'Opening vault…'
+    : error
+      ? 'Retry opening'
+      : 'Open Mystery Box'}
+</Button>
             </div>
           </div>
         </Card>
