@@ -1,5 +1,11 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 enum Rarity {
   COMMON
@@ -33,12 +39,13 @@ model Card {
 }
 
 model GuestSession {
-  id               String   @id @default(uuid()) @db.Uuid
-  displayName      String   @db.VarChar(20)
-  sessionTokenHash String   @unique @db.Char(64)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id               String    @id @default(uuid()) @db.Uuid
+  displayName      String    @db.VarChar(20)
+  sessionTokenHash String    @unique @db.Char(64)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   expiresAt        DateTime
   revokedAt        DateTime?
+
   @@index([expiresAt])
 }
