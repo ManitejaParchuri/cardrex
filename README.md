@@ -1,9 +1,10 @@
 # Cardrex
 
 Cardrex is a mobile-first digital collectible card experience. This repository currently
-contains the Phase 1 web foundation: a dark cosmic React interface, route placeholders,
-reusable UI primitives, linting, formatting, and tests. Secure claims and persistence are
-intentionally reserved for later phases.
+contains the Phase 1 web foundation and Phase 1.5 cosmic interface polish. Phase 2 adds a
+validated guest identity and temporary, browser-persisted session flow while preserving the
+existing route placeholders and reusable UI primitives. Secure claims remain reserved for
+later phases.
 
 ## Prerequisites
 
@@ -40,13 +41,13 @@ secrets in a `VITE_` variable. The included values are placeholders for future A
 
 ## Routes
 
-| Route         | Screen                      |
-| ------------- | --------------------------- |
-| `/`           | Landing page                |
-| `/guest`      | Temporary guest username    |
-| `/sign-in`    | Account sign-in placeholder |
-| `/claim`      | Card-opening placeholder    |
-| `/collection` | Collection placeholder      |
+| Route         | Screen                             |
+| ------------- | ---------------------------------- |
+| `/`           | Landing page                       |
+| `/guest`      | Temporary guest username           |
+| `/sign-in`    | Account sign-in placeholder        |
+| `/claim`      | Protected card-opening placeholder |
+| `/collection` | Protected collection placeholder   |
 
 ## Project layout
 
@@ -54,7 +55,9 @@ secrets in a `VITE_` variable. The included values are placeholders for future A
 src/
 ├── components/
 │   ├── layout/       # Shared shell and page headings
+│   ├── routing/      # Guest route protection
 │   └── ui/           # Button, card, loading, and modal primitives
+├── guest/            # Guest-session service, provider, validation, and tests
 ├── pages/            # Route-level screens
 ├── test/             # Shared test configuration
 ├── index.css         # Tailwind import, theme tokens, and global styles
@@ -65,10 +68,23 @@ src/
 Architecture and future-phase decisions are recorded in
 [`docs/mvp-architecture.md`](docs/mvp-architecture.md).
 
+## Phase 2: temporary guest sessions
+
+A guest chooses a 3–20 character display name. Cardrex creates a separate opaque ID, so the
+display name is never treated as identity and duplicate display names are allowed. The
+session service validates data before restoring it, and the provider keeps storage details
+out of pages and components. Protected routes preserve `/claim` or `/collection` as the
+intended destination when they redirect a visitor to `/guest`.
+
+The session currently persists in this browser's `localStorage`, including across browser
+restarts. This is temporary client-side continuity, **not authentication**. A later phase
+will replace this implementation with a secure, backend-issued session without requiring
+page components to access browser storage directly. Use **Leave guest** in the header or
+**Continue as different guest** on the guest screen to erase the local guest session.
+
 ## Current scope limitations
 
-- Guest names use `sessionStorage` only as a Phase 1 interface preview. A secure opaque,
-  server-backed guest session will replace it in the identity phase.
+- Browser-persisted guest identity is temporary and provides no authentication or security.
 - Sign-in, backend rarity selection, card persistence, and the reveal animation are not
   implemented yet.
 - All visible symbols and presentation are original interface elements; character artwork

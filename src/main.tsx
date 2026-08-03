@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 
+import { GuestSessionProvider } from './guest/GuestSessionContext';
 import { router } from './router';
 import './index.css';
 
@@ -13,6 +14,8 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <GuestSessionProvider>
+      <RouterProvider router={router} />
+    </GuestSessionProvider>
   </StrictMode>,
 );

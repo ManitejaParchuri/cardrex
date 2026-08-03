@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 import { AppLayout } from './components/layout/AppLayout';
+import { RequireGuest } from './components/routing/RequireGuest';
 import { CardOpeningPage } from './pages/CardOpeningPage';
 import { CollectionPage } from './pages/CollectionPage';
 import { GuestUsernamePage } from './pages/GuestUsernamePage';
@@ -16,8 +17,13 @@ export const router = createBrowserRouter([
       { index: true, element: <LandingPage /> },
       { path: 'guest', element: <GuestUsernamePage /> },
       { path: 'sign-in', element: <SignInPage /> },
-      { path: 'claim', element: <CardOpeningPage /> },
-      { path: 'collection', element: <CollectionPage /> },
+      {
+        element: <RequireGuest />,
+        children: [
+          { path: 'claim', element: <CardOpeningPage /> },
+          { path: 'collection', element: <CollectionPage /> },
+        ],
+      },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
