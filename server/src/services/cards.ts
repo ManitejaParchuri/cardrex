@@ -1,4 +1,9 @@
 import type { Rarity } from '@prisma/client';
+import rarityMetadata from '../../../shared/rarities.json' with { type: 'json' };
+import {
+  PROBABILITY_SCALE,
+  RARITY_PROBABILITIES,
+} from '../config/claimProbabilities.js';
 
 export const publicCardSelect = {
   name: true,
@@ -58,5 +63,32 @@ export class CardService {
   }
   findBySlug(slug: string) {
     return this.repository.findBySlug(slug);
+  }
+
+  async rarityOverview() {
+    const counts = await Promise.all([
+      this.repository.count(),
+      ...RARITY_PROBABILITIES.map(({ rarity }) =>
+        this.repository.count(rarity),
+      ),
+    ]);
+    const displayNames = new Map(
+      rarityMetadata.map(({ name, displayName, sortOrder }) => [
+        name,
+        { displayName, sortOrder },
+      ]),
+    );
+
+    return {
+      totalActiveCards: counts[0],
+      probabilityTotal: 100,
+      rarities: RARITY_PROBABILITIES.map(({ rarity, weight }, index) => ({
+        rarity,
+        displayName: displayNames.get(rarity)?.displayName ?? rarity,
+        activeCardCount: counts[index + 1],
+        probability: (weight / PROBABILITY_SCALE) * 100,
+        sortOrder: displayNames.get(rarity)?.sortOrder ?? index + 1,
+      })),
+    };
   }
 }

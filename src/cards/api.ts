@@ -1,17 +1,15 @@
 import type {
-  CardListResponse,
   Claim,
   ClaimStatus,
   CollectibleCard,
   OwnedCard,
-  Rarity,
-  RarityMetadata,
+  RarityOverview,
 } from './types';
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 async function get<T>(path: string): Promise<T> {
   const response = await fetch(`${baseUrl}${path}`, { credentials: 'include' });
   if (!response.ok)
-    throw new Error('The Card Archive could not be reached. Please try again.');
+    throw new Error('The vault could not be reached. Please try again.');
   return response.json() as Promise<T>;
 }
 async function parse<T>(response: Response): Promise<T> {
@@ -22,13 +20,8 @@ async function parse<T>(response: Response): Promise<T> {
     );
   return body;
 }
-export const cardArchiveApi = {
-  list: (rarity?: Rarity) =>
-    get<CardListResponse>(
-      `/cards?pageSize=50${rarity ? `&rarity=${rarity}` : ''}`,
-    ),
-  rarities: async () =>
-    (await get<{ rarities: RarityMetadata[] }>('/rarities')).rarities,
+export const rarityApi = {
+  rarityOverview: () => get<RarityOverview>('/rarities'),
 };
 export const claimApi = {
   status: () => get<ClaimStatus>('/claims/me'),
@@ -41,5 +34,5 @@ export const claimApi = {
     }).then((response) => parse<{ claim: Claim }>(response)),
   collection: () => get<{ cards: OwnedCard[] }>('/collection'),
   card: (slug: string) =>
-    get<{ card: CollectibleCard }>(`/cards/${encodeURIComponent(slug)}`),
+    get<{ card: CollectibleCard }>(`/collection/${encodeURIComponent(slug)}`),
 };

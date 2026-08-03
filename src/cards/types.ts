@@ -35,14 +35,16 @@ export interface CollectibleCard {
   imageUrl: string;
   collectionNumber: number;
 }
-export interface CardListResponse {
-  cards: CollectibleCard[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
+export interface RarityOverview {
+  totalActiveCards: number;
+  probabilityTotal: number;
+  rarities: Array<{
+    rarity: Rarity;
+    displayName: string;
+    activeCardCount: number;
+    probability: number;
+    sortOrder: number;
+  }>;
 }
 export interface Claim {
   id: string;

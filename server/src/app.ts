@@ -34,7 +34,7 @@ export function createApp(
   } as const;
   app.use('/api/guest-sessions', guestSessionRouter(service, cookie));
   app.use('/api/cards', cardRouter(cardService));
-  app.use('/api/rarities', rarityRouter);
+  app.use('/api/rarities', rarityRouter(cardService));
   if (claimService) {
     app.use('/api/claims', claimRouter(service, claimService));
     app.use('/api/collection', collectionRouter(service, claimService));

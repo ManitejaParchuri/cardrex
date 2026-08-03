@@ -19,13 +19,9 @@ describe('phase three experience', () => {
             url.includes('/collection')
               ? { cards: [] }
               : {
-                  cards: [],
-                  pagination: {
-                    page: 1,
-                    pageSize: 50,
-                    total: 0,
-                    totalPages: 0,
-                  },
+                  totalActiveCards: 0,
+                  probabilityTotal: 100,
+                  rarities: [],
                 },
         }),
       ),

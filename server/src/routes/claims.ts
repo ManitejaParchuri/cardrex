@@ -4,6 +4,7 @@ import type { ClaimService } from '../services/claims.js';
 import { safeClaim } from '../services/claims.js';
 import type { GuestSessionService } from '../services/guestSessions.js';
 import { createClaimSchema } from '../validation/claims.js';
+import { cardSlugSchema } from '../validation/cards.js';
 import { COOKIE_NAME } from './guestSessions.js';
 
 export function claimRouter(guests: GuestSessionService, claims: ClaimService) {
@@ -57,7 +58,8 @@ export function collectionRouter(
   guests: GuestSessionService,
   claims: ClaimService,
 ) {
-  return Router().get('/', async (req, res, next) => {
+  const router = Router();
+  router.get('/', async (req, res, next) => {
     try {
       const guest = await guests.authenticate(req.cookies[COOKIE_NAME]);
       if (!guest) {
@@ -69,4 +71,24 @@ export function collectionRouter(
       next(error);
     }
   });
+  router.get('/:slug', async (req, res, next) => {
+    try {
+      const guest = await guests.authenticate(req.cookies[COOKIE_NAME]);
+      if (!guest) {
+        res.status(401).json({ error: 'A valid guest session is required' });
+        return;
+      }
+      const slug = cardSlugSchema.parse(req.params.slug);
+      const collection = await claims.collection(guest.id);
+      const owned = collection.cards.find((item) => item.card.slug === slug);
+      if (!owned) {
+        res.status(404).json({ error: 'Card not found in your collection' });
+        return;
+      }
+      res.json({ card: owned.card });
+    } catch (error) {
+      next(error);
+    }
+  });
+  return router;
 }
