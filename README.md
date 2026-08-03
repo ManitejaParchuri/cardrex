@@ -76,16 +76,36 @@ session service validates data before restoring it, and the provider keeps stora
 out of pages and components. Protected routes preserve `/claim` or `/collection` as the
 intended destination when they redirect a visitor to `/guest`.
 
-The session currently persists in this browser's `localStorage`, including across browser
-restarts. This is temporary client-side continuity, **not authentication**. A later phase
-will replace this implementation with a secure, backend-issued session without requiring
-page components to access browser storage directly. Use **Leave guest** in the header or
-**Continue as different guest** on the guest screen to erase the local guest session.
+Phase 3 replaces browser persistence with a backend-issued, HTTP-only cookie. Use **Leave guest** in the header or **Continue as different guest** on the guest screen to revoke the server session and clear the cookie.
 
 ## Current scope limitations
 
-- Browser-persisted guest identity is temporary and provides no authentication or security.
-- Sign-in, backend rarity selection, card persistence, and the reveal animation are not
-  implemented yet.
+- Guest sessions provide temporary pseudonymous access, not registered accounts.
+- Sign-in, rarity selection, card persistence, and the reveal animation are not implemented yet.
 - All visible symbols and presentation are original interface elements; character artwork
   will be introduced with recorded provenance in a later phase.
+
+## Phase 3 development
+
+### Prerequisites and setup
+
+Cardrex now uses the existing React/Vite frontend, an Express/TypeScript API, and PostgreSQL through Prisma. Start PostgreSQL with `npm run db:up`. Copy `.env.example` to `.env.local`, copy `server/.env.example` to `server/.env`, then install backend dependencies with `npm install --prefix server`. The example database credentials are local-development values only.
+
+Apply the initial schema with `npm run prisma:migrate` (or `npm --prefix server run prisma:migrate -- --name init` when creating a new migration) and validate it with `npm run prisma:validate`.
+
+Run the frontend with `npm run dev:frontend` and the API with `npm run dev:backend` in separate terminals. Use `npm run db:down` to stop PostgreSQL. Frontend tests use `npm test`; backend tests use `npm run test:backend`; both use `npm run test:all`.
+
+### API
+
+| Method   | Endpoint                 | Purpose                                                               |
+| -------- | ------------------------ | --------------------------------------------------------------------- |
+| `GET`    | `/api/health`            | API readiness response                                                |
+| `POST`   | `/api/guest-sessions`    | Validate a display name, create a guest session, and issue its cookie |
+| `GET`    | `/api/guest-sessions/me` | Restore the valid guest represented by the cookie                     |
+| `DELETE` | `/api/guest-sessions/me` | Revoke the current guest session and clear its cookie                 |
+
+Requests from the frontend include credentials. Set `FRONTEND_ORIGIN` to the exact permitted browser origin. `COOKIE_SAME_SITE=lax` is appropriate for same-site deployments; use `none` only for a genuinely cross-site HTTPS deployment (production cookies are always `Secure`).
+
+### Guest-session security model
+
+The API creates a cryptographically random 256-bit token. Only its SHA-256 hash is persisted in PostgreSQL; the raw token exists solely in an HTTP-only cookie and is never returned in JSON or stored in browser storage. Session lookup authenticates by token hash and rejects missing, expired, or revoked rows. Logging out revokes the database row before clearing the cookie. Display names are trimmed and validated (3–20 letters, numbers, spaces, underscores, or hyphens), may be duplicated, and are presentation data—not authentication.

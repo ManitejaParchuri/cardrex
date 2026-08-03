@@ -10,7 +10,16 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run"
+    "test": "vitest run src",
+    "dev:frontend": "vite",
+    "dev:backend": "npm --prefix server run dev",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "prisma:migrate": "npm --prefix server run prisma:migrate",
+    "prisma:validate": "npm --prefix server run prisma:validate",
+    "test:frontend": "vitest run",
+    "test:backend": "npm --prefix server test",
+    "test:all": "npm test && npm run test:backend"
   },
   "dependencies": {
     "react": "^19.1.1",
