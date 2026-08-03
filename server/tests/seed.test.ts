@@ -60,6 +60,8 @@ describe('card seed', () => {
     expect(upsert).toHaveBeenCalledTimes(64);
     expect(upsert.mock.calls[0]?.[0]).toMatchObject({
       where: { slug: 'ari-vale' },
+      create: { imageUrl: '/cards/ari-vale.svg' },
+      update: { imageUrl: '/cards/ari-vale.svg' },
     });
   });
   it('maps every card to a local artwork file', () => {
