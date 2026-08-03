@@ -44,10 +44,14 @@ export class GuestSessionService {
     return { token, guest: safeGuest(guest) };
   }
   async restore(token: string | undefined) {
+    const guest = await this.authenticate(token);
+    return guest ? safeGuest(guest) : null;
+  }
+  async authenticate(token: string | undefined) {
     if (!token) return null;
     const guest = await this.repository.findByHash(hashToken(token));
     if (!guest || guest.revokedAt || guest.expiresAt <= new Date()) return null;
-    return safeGuest(guest);
+    return guest;
   }
   async revoke(token: string | undefined) {
     if (token) await this.repository.revoke(hashToken(token), new Date());

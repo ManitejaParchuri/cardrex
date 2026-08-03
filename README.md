@@ -42,13 +42,14 @@ secrets in a `VITE_` variable. The included values are placeholders for future A
 
 ## Routes
 
-| Route         | Screen                             |
-| ------------- | ---------------------------------- |
-| `/`           | Landing page                       |
-| `/guest`      | Temporary guest username           |
-| `/sign-in`    | Account sign-in placeholder        |
-| `/claim`      | Protected card-opening placeholder |
-| `/collection` | Protected collection placeholder   |
+| Route          | Screen                            |
+| -------------- | --------------------------------- |
+| `/`            | Landing page                      |
+| `/guest`       | Temporary guest username          |
+| `/sign-in`     | Account sign-in placeholder       |
+| `/claim`       | Protected mystery-box claim flow  |
+| `/collection`  | Owned cards and separate archive  |
+| `/cards/:slug` | Card details and ownership status |
 
 ## Project layout
 
@@ -82,7 +83,7 @@ Phase 3 replaces browser persistence with a backend-issued, HTTP-only cookie. Us
 ## Current scope limitations
 
 - Guest sessions provide temporary pseudonymous access, not registered accounts.
-- Claiming, random rarity selection, ownership, sign-in, trading, payments, and the mystery-box reveal are not implemented.
+- Registered accounts, sign-in, trading, duplicate pulls, daily claims, battles, and payments are not implemented.
 - Card character concepts and text are original. Artwork currently uses local placeholder paths and gracefully falls back to a cosmic silhouette.
 
 ## Phase 4: Card Archive
@@ -95,8 +96,8 @@ timestamps are not serialized.
 
 The rarity ladder, in ascending display order, is **Common**, **Uncommon**, **Rare**, **Epic**,
 **Legendary**, **Mythic**, **Rainbow**, and **Secret**. Shared display metadata supplies visual
-labels and style identifiers without storing CSS classes in PostgreSQL. Phase 4 does not assign
-probabilities and does not perform random selection.
+labels and style identifiers without storing CSS classes in PostgreSQL. Phase 5 assigns
+server-controlled probabilities and performs cryptographically secure selection.
 
 After PostgreSQL is running, apply migrations and seed the archive:
 
@@ -130,10 +131,29 @@ Run the frontend with `npm run dev:frontend` and the API with `npm run dev:backe
 | `GET`    | `/api/cards`             | List active cards; accepts `rarity`, `page`, and `pageSize` (maximum 50) |
 | `GET`    | `/api/cards/:slug`       | Fetch one active public card by slug                                     |
 | `GET`    | `/api/rarities`          | List rarity names and display metadata                                   |
+| `POST`   | `/api/claims`            | Make or idempotently replay the guest's one initial claim                |
+| `GET`    | `/api/claims/me`         | Return claim status and the current owned card                           |
+| `GET`    | `/api/collection`        | List the guest's active owned cards, newest first                        |
 
-The Card Archive is discovery-only: viewing a card never grants ownership. Claim APIs,
-guest collections, mystery-box opening, and duplicate-card behavior remain intentionally
-unimplemented.
+The Card Archive is discovery-only: viewing a card never grants ownership.
+
+### Phase 5 claiming
+
+Phase 5 permits **one successful initial claim per guest session**. `POST /api/claims` accepts
+only `{ "idempotencyKey": "<UUID>" }`; it never accepts a rarity or card ID. Repeating the
+same key returns the same claim without adding ownership, while a different key after a
+successful claim receives `409`. Claim history and ownership are written together in a
+serializable Prisma transaction and protected by database uniqueness constraints.
+
+Rarity selection is controlled entirely by `server/src/config/claimProbabilities.ts` and uses
+Node's cryptographically secure random number generator. The browser cannot influence it.
+The probabilities are **Common 45%**, **Uncommon 25%**, **Rare 14%**, **Epic 8%**,
+**Legendary 4.5%**, **Mythic 2%**, **Rainbow 1%**, and **Secret 0.5%**. Only active cards can be
+claimed; an empty selected rarity falls back through other active rarity pools.
+
+Run all checks locally with `npm run lint`, `npm run format:check`, `npm test`,
+`npm run test:backend`, `npm run build`, `npm run prisma:validate`,
+`npm run prisma:generate`, and `npm run prisma:migrate:check`.
 
 Requests from the frontend include credentials. Set `FRONTEND_ORIGIN` to the exact permitted browser origin. `COOKIE_SAME_SITE=lax` is appropriate for same-site deployments; use `none` only for a genuinely cross-site HTTPS deployment (production cookies are always `Secure`).
 

@@ -8,6 +8,7 @@ import { GuestUsernamePage } from './pages/GuestUsernamePage';
 import { LandingPage } from './pages/LandingPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { SignInPage } from './pages/SignInPage';
+import { CardDetailsPage } from './pages/CardDetailsPage';
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'claim', element: <CardOpeningPage /> },
           { path: 'collection', element: <CollectionPage /> },
+          { path: 'cards/:slug', element: <CardDetailsPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

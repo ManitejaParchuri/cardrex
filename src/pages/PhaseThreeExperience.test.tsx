@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -10,7 +9,27 @@ import { CardOpeningPage } from './CardOpeningPage';
 import { CollectionPage } from './CollectionPage';
 
 describe('phase three experience', () => {
-  it('shows a polished empty state when the collection has no cards', () => {
+  it('shows a polished empty state when the collection has no cards', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        Promise.resolve({
+          ok: true,
+          json: async () =>
+            url.includes('/collection')
+              ? { cards: [] }
+              : {
+                  cards: [],
+                  pagination: {
+                    page: 1,
+                    pageSize: 50,
+                    total: 0,
+                    totalPages: 0,
+                  },
+                },
+        }),
+      ),
+    );
     render(
       <MemoryRouter>
         <CollectionPage />
@@ -18,15 +37,17 @@ describe('phase three experience', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'Your collection awaits' }),
+      await screen.findByRole('heading', { name: 'Your collection awaits' }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/There are no cards in your vault yet/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Open your mystery box/)).toBeInTheDocument();
     expect(screen.queryByText(/null|undefined|\{\}/i)).not.toBeInTheDocument();
   });
 
   it('uses a safe identity fallback when guest profile data is missing', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise(() => undefined)),
+    );
     const api = {
       restore: vi.fn().mockResolvedValue({ id: 'guest', displayName: null }),
       create: vi.fn(),
@@ -49,24 +70,20 @@ describe('phase three experience', () => {
     expect(screen.queryByText(/null|undefined|\{\}/i)).not.toBeInTheDocument();
   });
 
-  it('keeps the mystery vault interaction disabled', async () => {
-    const user = userEvent.setup();
+  it('checks claim status before enabling the mystery vault', () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise(() => undefined)),
+    );
     render(
       <MemoryRouter>
         <CardOpeningPage />
       </MemoryRouter>,
     );
 
-    const openButton = screen.getByRole('button', {
-      name: 'Open mystery vault',
-    });
-    expect(openButton).toBeDisabled();
-    await user.click(openButton);
-    expect(openButton).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Checking your vault');
     expect(
-      screen.getByText('Card claiming unlocks in the next phase', {
-        exact: false,
-      }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: 'Open Mystery Box' }),
+    ).not.toBeInTheDocument();
   });
 });

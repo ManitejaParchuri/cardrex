@@ -12,6 +12,13 @@ import {
   type Guest,
   type GuestSessionRepository,
 } from '../src/services/guestSessions.js';
+import {
+  ClaimService,
+  type ClaimRepository,
+  type ClaimView,
+  type CreateClaimResult,
+  type OwnedCardView,
+} from '../src/services/claims.js';
 class MemoryRepo implements GuestSessionRepository {
   rows: Guest[] = [];
   async create(data: Omit<Guest, 'id' | 'createdAt' | 'revokedAt'>) {
@@ -43,6 +50,7 @@ const env = {
 const setup = (ttl = 30) => {
   const repo = new MemoryRepo();
   const cards = new MemoryCardRepo();
+  const claims = new MemoryClaimRepo();
   return {
     repo,
     cards,
@@ -50,7 +58,9 @@ const setup = (ttl = 30) => {
       env,
       new GuestSessionService(repo, ttl),
       new CardService(cards),
+      new ClaimService(claims, () => 'COMMON'),
     ),
+    claims,
   };
 };
 const sample = (overrides: Partial<PublicCard> = {}): PublicCard => ({
@@ -101,6 +111,57 @@ class MemoryCardRepo implements CardRepository {
   }
   async findBySlug(slug: string) {
     return this.visible().find((card) => card.slug === slug) ?? null;
+  }
+}
+class MemoryClaimRepo implements ClaimRepository {
+  rows: Array<ClaimView & { guestSessionId: string; idempotencyKey: string }> =
+    [];
+  owned: Array<OwnedCardView & { guestSessionId: string }> = [];
+  async createInitial({
+    guestSessionId,
+    idempotencyKey,
+    rarityOrder,
+  }: {
+    guestSessionId: string;
+    idempotencyKey: string;
+    rarityOrder: PublicCard['rarity'][];
+  }): Promise<CreateClaimResult> {
+    const keyed = this.rows.find(
+      (row) => row.idempotencyKey === idempotencyKey,
+    );
+    if (keyed)
+      return keyed.guestSessionId === guestSessionId
+        ? { kind: 'replayed', claim: keyed }
+        : { kind: 'key-conflict' };
+    const existing = this.rows.find(
+      (row) => row.guestSessionId === guestSessionId,
+    );
+    if (existing) return { kind: 'already-claimed', claim: existing };
+    const card = sample({ rarity: rarityOrder[0] });
+    const claim = {
+      id: crypto.randomUUID(),
+      guestSessionId,
+      idempotencyKey,
+      rarity: card.rarity,
+      createdAt: new Date(),
+      card,
+    };
+    this.rows.push(claim);
+    this.owned.push({
+      guestSessionId,
+      obtainedAt: claim.createdAt,
+      claimId: claim.id,
+      card,
+    });
+    return { kind: 'created', claim };
+  }
+  async findClaim(guestSessionId: string) {
+    return (
+      this.rows.find((row) => row.guestSessionId === guestSessionId) ?? null
+    );
+  }
+  async listOwned(guestSessionId: string) {
+    return this.owned.filter((row) => row.guestSessionId === guestSessionId);
   }
 }
 describe('API', () => {
@@ -198,5 +259,56 @@ describe('API', () => {
       name: 'SECRET',
       sortOrder: 8,
     });
+  });
+  it('rejects unauthenticated and malformed claims', async () => {
+    await request(setup().app)
+      .post('/api/claims')
+      .send({ idempotencyKey: crypto.randomUUID() })
+      .expect(401);
+    const agent = request.agent(setup().app);
+    await agent.post('/api/guest-sessions').send({ displayName: 'Nova' });
+    await agent.post('/api/claims').send({}).expect(400);
+    await agent
+      .post('/api/claims')
+      .send({ idempotencyKey: 'bad', rarity: 'SECRET' })
+      .expect(400);
+  });
+  it('creates one transactional ownership and replays the same key', async () => {
+    const { app, claims } = setup();
+    const agent = request.agent(app);
+    await agent.post('/api/guest-sessions').send({ displayName: 'Nova' });
+    const key = crypto.randomUUID();
+    const first = await agent
+      .post('/api/claims')
+      .send({ idempotencyKey: key })
+      .expect(201);
+    const replay = await agent
+      .post('/api/claims')
+      .send({ idempotencyKey: key })
+      .expect(200);
+    expect(replay.body.claim.id).toBe(first.body.claim.id);
+    expect(claims.rows).toHaveLength(1);
+    expect(claims.owned).toHaveLength(1);
+  });
+  it('rejects a second initial claim and returns status and collection', async () => {
+    const { app } = setup();
+    const agent = request.agent(app);
+    await agent.post('/api/guest-sessions').send({ displayName: 'Nova' });
+    expect((await agent.get('/api/claims/me').expect(200)).body.claimed).toBe(
+      false,
+    );
+    await agent
+      .post('/api/claims')
+      .send({ idempotencyKey: crypto.randomUUID() })
+      .expect(201);
+    await agent
+      .post('/api/claims')
+      .send({ idempotencyKey: crypto.randomUUID() })
+      .expect(409);
+    const status = await agent.get('/api/claims/me').expect(200);
+    expect(status.body.claimed).toBe(true);
+    const collection = await agent.get('/api/collection').expect(200);
+    expect(collection.body.cards[0].card.slug).toBe('ari-vale');
+    expect(collection.body.cards[0].card).not.toHaveProperty('id');
   });
 });
