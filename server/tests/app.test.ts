@@ -239,26 +239,48 @@ describe('API', () => {
     });
     await request(setup().app).get('/api/cards?pageSize=51').expect(400);
   });
-  it('returns card detail and excludes inactive cards', async () => {
-    expect(
-      (await request(setup().app).get('/api/cards/ari-vale').expect(200)).body
-        .card.name,
-    ).toBe('Ari Vale');
+  it('does not publicly expose direct card details', async () => {
+    await request(setup().app).get('/api/cards/ari-vale').expect(404);
     await request(setup().app).get('/api/cards/hidden').expect(404);
     await request(setup().app).get('/api/cards/missing').expect(404);
   });
   it('rejects invalid rarity values', async () => {
     await request(setup().app).get('/api/cards?rarity=ULTRA').expect(400);
   });
-  it('publishes rarity display metadata', async () => {
+  it('publishes active-only rarity statistics without card information', async () => {
     const response = await request(setup().app)
       .get('/api/rarities')
       .expect(200);
+    expect(response.body).toMatchObject({
+      totalActiveCards: 2,
+      probabilityTotal: 100,
+    });
     expect(response.body.rarities).toHaveLength(8);
     expect(response.body.rarities[7]).toMatchObject({
-      name: 'SECRET',
+      rarity: 'SECRET',
+      displayName: 'Secret',
+      activeCardCount: 0,
+      probability: 0.5,
       sortOrder: 8,
     });
+    expect(response.body.rarities[0]).toMatchObject({
+      rarity: 'COMMON',
+      activeCardCount: 1,
+      probability: 45,
+    });
+    const body = JSON.stringify(response.body);
+    for (const secret of [
+      'Ari Vale',
+      'ari-vale',
+      'imageUrl',
+      'description',
+      'lore',
+      'attack',
+      'defense',
+      'Hidden',
+    ]) {
+      expect(body).not.toContain(secret);
+    }
   });
   it('rejects unauthenticated and malformed claims', async () => {
     await request(setup().app)
@@ -310,5 +332,17 @@ describe('API', () => {
     const collection = await agent.get('/api/collection').expect(200);
     expect(collection.body.cards[0].card.slug).toBe('ari-vale');
     expect(collection.body.cards[0].card).not.toHaveProperty('id');
+    expect(
+      (await agent.get('/api/collection/ari-vale').expect(200)).body.card.name,
+    ).toBe('Ari Vale');
+    await agent.get('/api/collection/iona-prismark').expect(404);
+  });
+
+  it('does not expose card details through collection routes to other guests', async () => {
+    const { app } = setup();
+    await request(app).get('/api/collection/ari-vale').expect(401);
+    const agent = request.agent(app);
+    await agent.post('/api/guest-sessions').send({ displayName: 'Nova' });
+    await agent.get('/api/collection/ari-vale').expect(404);
   });
 });

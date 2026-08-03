@@ -12,13 +12,12 @@ export function CardDetailsPage() {
   const [error, setError] = useState('');
   useEffect(() => {
     let current = true;
-    Promise.all([claimApi.card(slug), claimApi.collection()])
-      .then(([detail, collection]) => {
+    claimApi
+      .card(slug)
+      .then((detail) => {
         if (!current) return;
         setCard(detail.card);
-        setOwned(
-          collection.cards.some((item) => item.card.slug === detail.card.slug),
-        );
+        setOwned(true);
       })
       .catch((reason: unknown) => {
         if (current)

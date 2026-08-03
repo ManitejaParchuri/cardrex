@@ -1,19 +1,17 @@
 import { useEffect, useState } from 'react';
-import { cardArchiveApi, claimApi } from '../cards/api';
-import {
-  rarityMetadata,
-  type CollectibleCard as CardData,
-  type Rarity,
+import { Link } from 'react-router-dom';
+import { claimApi, rarityApi } from '../cards/api';
+import type {
+  CollectibleCard as CardData,
+  RarityOverview,
 } from '../cards/types';
 import { PageIntro } from '../components/layout/PageIntro';
 import { Card } from '../components/ui/Card';
 import { CollectibleCard } from '../components/ui/CollectibleCard';
 import { Loading } from '../components/ui/Loading';
 export function CollectionPage() {
-  const [cards, setCards] = useState<CardData[]>([]);
-  const [rarity, setRarity] = useState<Rarity | ''>('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [overview, setOverview] = useState<RarityOverview | null>(null);
+  const [overviewError, setOverviewError] = useState('');
   const [owned, setOwned] = useState<CardData[]>([]);
   const [ownedLoading, setOwnedLoading] = useState(true);
   const [ownedError, setOwnedError] = useState('');
@@ -41,32 +39,29 @@ export function CollectionPage() {
   }, []);
   useEffect(() => {
     let current = true;
-    setLoading(true);
-    setError('');
-    cardArchiveApi
-      .list(rarity || undefined)
+    rarityApi
+      .rarityOverview()
       .then((result) => {
-        if (current) setCards(result.cards);
+        if (current) setOverview(result);
       })
       .catch((reason: unknown) => {
         if (current)
-          setError(
-            reason instanceof Error ? reason.message : 'Archive unavailable.',
+          setOverviewError(
+            reason instanceof Error
+              ? reason.message
+              : 'Rarity overview unavailable.',
           );
-      })
-      .finally(() => {
-        if (current) setLoading(false);
       });
     return () => {
       current = false;
     };
-  }, [rarity]);
+  }, []);
   return (
     <div className="w-full py-10 sm:py-16">
       <PageIntro
         eyebrow="The vault"
         title="Your collection"
-        description="Cards secured by this guest appear here. The archive remains a separate gallery."
+        description="Cards secured by this guest appear here."
       />
       {ownedLoading ? (
         <Loading label="Loading your collection" />
@@ -81,7 +76,9 @@ export function CollectionPage() {
         <section className="mt-8" aria-label="Owned cards">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {owned.map((card) => (
-              <CollectibleCard key={card.slug} card={card} />
+              <Link key={card.slug} to={`/cards/${card.slug}`}>
+                <CollectibleCard card={card} />
+              </Link>
             ))}
           </div>
         </section>
@@ -103,61 +100,52 @@ export function CollectionPage() {
           </div>
         </Card>
       )}
-      <section className="mt-14" aria-labelledby="archive-title">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-xs font-bold tracking-[0.22em] text-violet-300 uppercase">
-              Discoverable cards
-            </p>
-            <h2
-              id="archive-title"
-              className="mt-2 text-3xl font-black text-white"
-            >
-              Card Archive
-            </h2>
-            <p className="mt-2 text-sm text-violet-100/60">
-              A read-only preview. These cards are not owned by your guest.
-            </p>
-          </div>
-          <label className="text-sm font-bold text-violet-100">
-            Filter by rarity{' '}
-            <select
-              aria-label="Filter by rarity"
-              value={rarity}
-              onChange={(event) => setRarity(event.target.value as Rarity | '')}
-              className="ml-2 min-h-11 rounded-xl border border-violet-300/25 bg-[#17102d] px-3 text-white"
-            >
-              <option value="">All rarities</option>
-              {rarityMetadata.map((item) => (
-                <option key={item.name} value={item.name}>
-                  {item.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+      <section className="mt-14" aria-labelledby="rarity-overview-title">
+        <h2
+          id="rarity-overview-title"
+          className="text-3xl font-black text-white"
+        >
+          Rarity Overview
+        </h2>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-violet-100/60">
+          Card identities remain hidden until claimed. Below you can see how
+          many active cards exist in each rarity and the chance of receiving
+          that rarity.
+        </p>
         <div className="mt-7">
-          {loading ? (
-            <Loading label="Loading Card Archive" />
-          ) : error ? (
+          {!overview && !overviewError ? (
+            <Loading label="Loading rarity overview" />
+          ) : overviewError ? (
             <div
               role="alert"
               className="rounded-2xl border border-rose-300/25 bg-rose-400/10 p-6 text-rose-100"
             >
-              <p className="font-bold">Archive signal lost</p>
-              <p className="mt-1 text-sm">{error}</p>
+              <p className="font-bold">Rarity overview unavailable</p>
+              <p className="mt-1 text-sm">{overviewError}</p>
             </div>
-          ) : cards.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-violet-300/20 p-8 text-center text-violet-100/60">
-              No discoverable cards match this rarity.
-            </p>
-          ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {cards.map((card) => (
-                <CollectibleCard key={card.slug} card={card} />
-              ))}
-            </div>
-          )}
+          ) : overview ? (
+            <Card>
+              <p className="text-lg font-black text-white">
+                Total active cards: {overview.totalActiveCards}
+              </p>
+              <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {overview.rarities.map((item) => (
+                  <div
+                    key={item.rarity}
+                    className="rounded-xl bg-violet-300/[.06] p-4"
+                  >
+                    <dt className="font-bold text-white">{item.displayName}</dt>
+                    <dd className="mt-1 text-sm text-violet-100/65">
+                      {item.activeCardCount} active · {item.probability}%
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-5 text-sm font-bold text-violet-200">
+                Probability total: {overview.probabilityTotal}%
+              </p>
+            </Card>
+          ) : null}
         </div>
       </section>
     </div>
