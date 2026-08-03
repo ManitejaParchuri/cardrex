@@ -1,7 +1,11 @@
 import type { CSSProperties } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+
+import { useGuestSession } from '../../guest/GuestSessionContext';
 
 export function AppLayout() {
+  const navigate = useNavigate();
+  const { session, isLoading, resetSession } = useGuestSession();
   const stars = [
     ['8%', '18%', '2px', '4.6s', '-1s'],
     ['18%', '72%', '3px', '5.2s', '-3s'],
@@ -48,12 +52,34 @@ export function AppLayout() {
           </span>
           Cardrex
         </Link>
-        <Link
-          to="/collection"
-          className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/5 px-4 text-sm font-semibold text-violet-100 backdrop-blur-md transition hover:-translate-y-0.5 hover:border-violet-300/40 hover:bg-white/10 active:translate-y-0 active:scale-[0.98]"
-        >
-          Collection
-        </Link>
+        <div className="flex items-center gap-2">
+          {!isLoading && session ? (
+            <>
+              <span className="hidden text-sm text-violet-100/70 sm:inline">
+                Guest:{' '}
+                <strong className="text-violet-100">
+                  {session.displayName}
+                </strong>
+              </span>
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center px-2 text-xs font-semibold text-violet-300 underline underline-offset-4"
+                onClick={async () => {
+                  await resetSession();
+                  navigate('/guest');
+                }}
+              >
+                Leave guest
+              </button>
+            </>
+          ) : null}
+          <Link
+            to="/collection"
+            className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/5 px-4 text-sm font-semibold text-violet-100 backdrop-blur-md transition hover:-translate-y-0.5 hover:border-violet-300/40 hover:bg-white/10 active:translate-y-0 active:scale-[0.98]"
+          >
+            Collection
+          </Link>
+        </div>
       </header>
       <main className="mx-auto flex w-full max-w-6xl flex-1 px-5 pb-10 sm:px-8">
         <Outlet />
