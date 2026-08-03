@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { cardSeedData } from '../prisma/cardData.js';
 import { seedCards } from '../prisma/seed.js';
 describe('card seed', () => {
@@ -59,5 +61,16 @@ describe('card seed', () => {
     expect(upsert.mock.calls[0]?.[0]).toMatchObject({
       where: { slug: 'ari-vale' },
     });
+  });
+  it('maps every card to a local artwork file', () => {
+    for (const card of cardSeedData) {
+      expect(card.imageUrl).toBe(`/cards/${card.slug}.svg`);
+      expect(
+        existsSync(
+          resolve(process.cwd(), '..', 'public', card.imageUrl.slice(1)),
+        ),
+        `Missing artwork for ${card.name}`,
+      ).toBe(true);
+    }
   });
 });

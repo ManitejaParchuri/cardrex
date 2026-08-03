@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { claimApi } from '../cards/api';
 import { rarityByName, type CollectibleCard } from '../cards/types';
 import { Loading } from '../components/ui/Loading';
+import { CardArtwork } from '../components/ui/CardArtwork';
 
 export function CardDetailsPage() {
   const { slug = '' } = useParams();
@@ -39,11 +40,11 @@ export function CardDetailsPage() {
   const rarity = rarityByName[card.rarity];
   return (
     <article className="mx-auto grid max-w-5xl gap-8 py-10 md:grid-cols-2 md:py-16">
-      <div className="bg-nebula overflow-hidden rounded-3xl border border-violet-300/30">
-        <img
-          src={card.imageUrl}
-          alt={`Artwork for ${card.name}`}
-          className="aspect-[4/3] h-full w-full object-cover"
+      <div className="bg-nebula aspect-[4/3] overflow-hidden rounded-3xl border border-violet-300/30">
+        <CardArtwork
+          name={card.name}
+          rarity={card.rarity}
+          imageUrl={card.imageUrl}
         />
       </div>
       <div className="self-center">

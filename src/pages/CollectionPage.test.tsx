@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CollectionPage } from './CollectionPage';
 const card = {
@@ -62,8 +62,7 @@ describe('CollectionPage archive', () => {
       await screen.findByRole('article', { name: 'Iona Prismark, Rare' }),
     ).toHaveTextContent('Azure');
     expect(screen.getByText('ATK 51')).toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.queryByRole('status')).not.toBeInTheDocument(),
-    );
+    fireEvent.error(screen.getByAltText('Artwork for Iona Prismark'));
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

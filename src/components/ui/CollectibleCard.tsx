@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import {
   rarityByName,
   type CollectibleCard as CardData,
 } from '../../cards/types';
+import { CardArtwork } from './CardArtwork';
 const treatments = {
   slate: 'border-slate-300/40 shadow-slate-300/10',
   emerald: 'border-emerald-300/55 shadow-emerald-400/20',
@@ -14,7 +14,6 @@ const treatments = {
   obsidian: 'border-white/80 shadow-violet-200/40',
 } as const;
 export function CollectibleCard({ card }: { card: CardData }) {
-  const [imageFailed, setImageFailed] = useState(false);
   const rarity = rarityByName[card.rarity];
   return (
     <article
@@ -22,23 +21,11 @@ export function CollectibleCard({ card }: { card: CardData }) {
       className={`overflow-hidden rounded-2xl border bg-[#100b20] shadow-[0_15px_45px_var(--tw-shadow-color)] ${treatments[rarity.borderStyle as keyof typeof treatments] ?? treatments.slate}`}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(circle_at_50%_35%,rgba(167,139,250,.3),transparent_45%),linear-gradient(145deg,#20143e,#0b0915)]">
-        {!imageFailed && (
-          <img
-            src={card.imageUrl}
-            alt={`Placeholder artwork for ${card.name}`}
-            className="h-full w-full object-cover"
-            onError={() => setImageFailed(true)}
-          />
-        )}
-        {imageFailed && (
-          <div
-            className="grid h-full place-items-center text-5xl text-violet-100/35"
-            role="img"
-            aria-label={`Artwork placeholder for ${card.name}`}
-          >
-            ✦
-          </div>
-        )}
+        <CardArtwork
+          name={card.name}
+          rarity={card.rarity}
+          imageUrl={card.imageUrl}
+        />
         <span className="absolute top-2 right-2 rounded-full border border-white/20 bg-black/70 px-2 py-1 text-[10px] font-black tracking-wider text-white uppercase">
           {rarity.visualLabel}
         </span>

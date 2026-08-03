@@ -376,7 +376,7 @@ export const cardSeedData: SeedCard[] = drafts.map(
     defense,
     abilityName,
     abilityDescription,
-    imageUrl: `/card-art/${slugify(name)}.webp`,
+    imageUrl: `/cards/${slugify(name)}.svg`,
     collectionNumber: index + 1,
     active: true,
   }),
