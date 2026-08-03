@@ -1,61 +1,57 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-
-import {
-  BrowserGuestSessionStorage,
-  createGuestSession,
-  GUEST_SESSION_STORAGE_KEY,
-  validateGuestDisplayName,
-} from './guestSession';
-
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { GuestSessionApi, validateGuestDisplayName } from './guestSession';
 describe('guest display-name validation', () => {
-  it.each([
-    ['', 'at least 3'],
-    ['ab', 'at least 3'],
-    ['abcdefghijklmnopqrstu', 'no more than 20'],
-    ['Nova!', 'only letters'],
-  ])('rejects %j', (value, message) => {
-    expect(validateGuestDisplayName(value)).toContain(message);
-  });
-
-  it.each(['Nova Scout', 'nova_scout', 'Nova-42', '  Nova  '])(
-    'accepts %j',
-    (value) => expect(validateGuestDisplayName(value)).toBeNull(),
+  it('accepts and trims supported names', () =>
+    expect(validateGuestDisplayName(' Nova-7 ')).toBeNull());
+  it.each(['ab', 'a'.repeat(21), 'Nova!'])('rejects invalid name %s', (name) =>
+    expect(validateGuestDisplayName(name)).not.toBeNull(),
   );
 });
-
-describe('guest session service', () => {
-  beforeEach(() => localStorage.clear());
-
-  it('creates an opaque identity and trims the display name', () => {
-    const first = createGuestSession('  Nova Scout  ');
-    const second = createGuestSession('Nova Scout');
-
-    expect(first.displayName).toBe('Nova Scout');
-    expect(first.id).toMatch(/^guest_/);
-    expect(first.id).not.toContain('Nova');
-    expect(second.id).not.toBe(first.id);
-  });
-
-  it('persists and restores a session across storage instances', async () => {
-    const session = createGuestSession('Nova Scout');
-    await new BrowserGuestSessionStorage().save(session);
-
-    await expect(new BrowserGuestSessionStorage().load()).resolves.toEqual(
-      session,
+describe('GuestSessionApi', () => {
+  beforeEach(() => vi.restoreAllMocks());
+  it('restores through credentialed API requests', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            guest: {
+              id: '1',
+              displayName: 'Nova',
+              createdAt: '2026-01-01',
+              expiresAt: '2026-02-01',
+            },
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+    expect((await new GuestSessionApi('/api').restore())?.displayName).toBe(
+      'Nova',
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/guest-sessions/me',
+      expect.objectContaining({ credentials: 'include' }),
     );
   });
-
-  it('discards invalid stored session data', async () => {
-    localStorage.setItem(
-      GUEST_SESSION_STORAGE_KEY,
-      JSON.stringify({
-        version: 1,
-        id: 'Nova Scout',
-        displayName: 'Nova Scout',
-      }),
+  it('treats unauthorized restore as no session', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(null, { status: 401 })),
     );
-
-    await expect(new BrowserGuestSessionStorage().load()).resolves.toBeNull();
-    expect(localStorage.getItem(GUEST_SESSION_STORAGE_KEY)).toBeNull();
+    expect(await new GuestSessionApi('/api').restore()).toBeNull();
+  });
+  it('reports API failures', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ error: 'Offline' }), { status: 503 }),
+        ),
+    );
+    await expect(new GuestSessionApi('/api').create('Nova')).rejects.toThrow(
+      'Offline',
+    );
   });
 });

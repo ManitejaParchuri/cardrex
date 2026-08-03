@@ -8,16 +8,12 @@ import {
   type ReactNode,
 } from 'react';
 
-import {
-  BrowserGuestSessionStorage,
-  createGuestSession,
-  type GuestSession,
-  type GuestSessionStorage,
-} from './guestSession';
+import { GuestSessionApi, type GuestSession } from './guestSession';
 
 interface GuestSessionContextValue {
   session: GuestSession | null;
   isLoading: boolean;
+  error: string | null;
   startSession(displayName: string): Promise<GuestSession>;
   resetSession(): Promise<void>;
 }
@@ -25,24 +21,28 @@ interface GuestSessionContextValue {
 const GuestSessionContext = createContext<GuestSessionContextValue | null>(
   null,
 );
-const browserStorage = new BrowserGuestSessionStorage();
+const browserApi = new GuestSessionApi();
 
 export function GuestSessionProvider({
   children,
-  storage = browserStorage,
+  api = browserApi,
 }: {
   children: ReactNode;
-  storage?: GuestSessionStorage;
+  api?: GuestSessionApi;
 }) {
   const [session, setSession] = useState<GuestSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    void storage
-      .load()
+    void api
+      .restore()
       .then((restored) => {
         if (active) setSession(restored);
+      })
+      .catch(() => {
+        if (active) setError('Unable to restore your guest session.');
       })
       .finally(() => {
         if (active) setIsLoading(false);
@@ -50,26 +50,27 @@ export function GuestSessionProvider({
     return () => {
       active = false;
     };
-  }, [storage]);
+  }, [api]);
 
   const startSession = useCallback(
     async (displayName: string) => {
-      const created = createGuestSession(displayName);
-      await storage.save(created);
+      setError(null);
+      const created = await api.create(displayName);
       setSession(created);
       return created;
     },
-    [storage],
+    [api],
   );
 
   const resetSession = useCallback(async () => {
-    await storage.clear();
+    setError(null);
+    await api.clear();
     setSession(null);
-  }, [storage]);
+  }, [api]);
 
   const value = useMemo(
-    () => ({ session, isLoading, startSession, resetSession }),
-    [isLoading, resetSession, session, startSession],
+    () => ({ session, isLoading, error, startSession, resetSession }),
+    [error, isLoading, resetSession, session, startSession],
   );
 
   return (

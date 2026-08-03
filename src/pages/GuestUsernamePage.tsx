@@ -11,10 +11,17 @@ import { validateGuestDisplayName } from '../guest/guestSession';
 export function GuestUsernamePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { session, isLoading, startSession, resetSession } = useGuestSession();
+  const {
+    session,
+    isLoading,
+    error: apiError,
+    startSession,
+    resetSession,
+  } = useGuestSession();
   const [username, setUsername] = useState('');
   const [isTouched, setIsTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const error = validateGuestDisplayName(username);
   const intendedPath = (
     location.state as { from?: { pathname?: string } } | null
@@ -30,8 +37,19 @@ export function GuestUsernamePage() {
     if (error) return;
 
     setIsSubmitting(true);
-    await startSession(username);
-    navigate(destination, { replace: true });
+    setSubmitError(null);
+    try {
+      await startSession(username);
+      navigate(destination, { replace: true });
+    } catch (cause) {
+      setSubmitError(
+        cause instanceof Error
+          ? cause.message
+          : 'Unable to start a guest session.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) return <Loading label="Restoring guest session" />;
@@ -42,7 +60,7 @@ export function GuestUsernamePage() {
         <PageIntro
           eyebrow="Guest access"
           title={`Welcome back, ${session.displayName}`}
-          description="Your temporary guest session is active on this browser."
+          description="Your temporary guest session is securely active."
         />
         <Card className="mt-8 space-y-3">
           <Button fullWidth onClick={() => navigate(destination)}>
@@ -68,7 +86,7 @@ export function GuestUsernamePage() {
       <PageIntro
         eyebrow="Guest access"
         title="Choose your cosmic name"
-        description="This display name is saved temporarily on this browser. It is not an account or authentication."
+        description="This display name is used for this temporary session. It is not an account or authentication."
       />
       <Card className="mt-8">
         <form onSubmit={submit} noValidate>
@@ -102,6 +120,11 @@ export function GuestUsernamePage() {
               {username.length}/20
             </span>
           </div>
+          {(submitError ?? apiError) && (
+            <p className="mt-3 text-sm text-rose-300" role="alert">
+              {submitError ?? apiError}
+            </p>
+          )}
           <Button
             type="submit"
             fullWidth
