@@ -29,10 +29,12 @@ export function CardArtwork({
   className = '',
 }: CardArtworkProps) {
   const source = imageUrl?.trim() || '';
-  const [status, setStatus] = useState<'loading' | 'loaded' | 'failed'>(
-    source ? 'loading' : 'failed',
-  );
-  useEffect(() => setStatus(source ? 'loading' : 'failed'), [source]);
+  const [isLoading, setIsLoading] = useState(Boolean(source));
+  const [hasError, setHasError] = useState(!source);
+  useEffect(() => {
+    setIsLoading(Boolean(source));
+    setHasError(!source);
+  }, [source]);
   const patternPosition = useMemo(() => {
     const seed = [...(name || '')].reduce(
       (sum, letter) => sum + letter.charCodeAt(0),
@@ -42,13 +44,14 @@ export function CardArtwork({
   }, [name]);
   const label = name?.trim() || 'Unnamed card';
   const rarityLabel = rarityByName[rarity]?.displayName || 'Card';
+  const status = hasError ? 'failed' : isLoading ? 'loading' : 'loaded';
 
   return (
     <div
       className={`relative isolate h-full w-full overflow-hidden bg-gradient-to-br ${rarityThemes[rarity]} ${className}`}
       data-artwork-status={status}
     >
-      {status !== 'loaded' && (
+      {(isLoading || hasError) && (
         <div
           role="img"
           aria-label={`Artwork for ${label}`}
@@ -73,16 +76,22 @@ export function CardArtwork({
           </div>
         </div>
       )}
-      {source && status !== 'failed' && (
+      {source && !hasError && (
         <img
           src={source}
           alt={`Artwork for ${label}`}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${status === 'loaded' ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setStatus('loaded')}
-          onError={() => setStatus('failed')}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          onLoad={() => {
+            setIsLoading(false);
+            setHasError(false);
+          }}
+          onError={() => {
+            setIsLoading(false);
+            setHasError(true);
+          }}
         />
       )}
-      {status === 'loading' && (
+      {isLoading && (
         <div
           role="status"
           aria-label={`Loading artwork for ${label}`}

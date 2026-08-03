@@ -24,6 +24,40 @@ describe('CardArtwork', () => {
     expect(document.querySelector('img')).not.toBeInTheDocument();
   });
 
+  it('resets loading and error state when the image URL changes', () => {
+    const { rerender } = renderArtwork('/missing.svg');
+    fireEvent.error(screen.getByAltText('Artwork for Ari Vale'));
+    expect(document.querySelector('img')).not.toBeInTheDocument();
+
+    rerender(
+      <CardArtwork
+        name="Ari Vale"
+        rarity="COMMON"
+        imageUrl="/cards/ari-vale.svg"
+      />,
+    );
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByAltText('Artwork for Ari Vale')).toHaveAttribute(
+      'src',
+      '/cards/ari-vale.svg',
+    );
+  });
+
+  it('resolves root-relative artwork from the frontend origin', () => {
+    renderArtwork('/cards/ari-vale.svg');
+    const image = screen.getByAltText('Artwork for Ari Vale');
+
+    expect(image).toHaveProperty(
+      'src',
+      `${window.location.origin}/cards/ari-vale.svg`,
+    );
+    expect(image).not.toHaveProperty(
+      'src',
+      'http://localhost:3001/cards/ari-vale.svg',
+    );
+  });
+
   it.each([null, '', '   '])(
     'safely renders fallback without an image for %p',
     (imageUrl) => {
